@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ずぼら価格一発比較ツール</title>
     
+    <!-- PWA設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ずぼら比較">
@@ -224,6 +225,7 @@
 
     <div class="container">
         
+        <!-- 🏠 メイン比較画面 -->
         <div id="page-search" class="page active">
             
             <div class="mode-selector">
@@ -242,7 +244,7 @@
                 </div>
 
                 <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 对抗価格 (あれば)</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 対抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
@@ -251,6 +253,7 @@
             
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
+            <!-- 📊 対話用セクション -->
             <div id="ai-chat-section" class="ai-chat-box" style="display:none; margin-top: 20px;">
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
                 <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
@@ -258,11 +261,13 @@
                 <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatDetailAnswer()">この条件で商品を探してもらう 🔍</button>
             </div>
 
+            <!-- 📊 おすすめ商品提案セクション -->
             <div id="ai-suggestions-section" class="ai-suggestion-box" style="display:none; margin-top: 20px;">
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💡 Geminiのおすすめ商品</div>
                 <div id="ai-suggestions-list"></div>
             </div>
 
+            <!-- 📊 比較結果表示（最終段階） -->
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
                 <div id="result-summary" style="font-size: 0.95rem; line-height: 1.5; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #2d2d2d;"></div>
@@ -270,6 +275,7 @@
             </div>
         </div>
 
+        <!-- 🛡️ 設定・ショップ管理画面 -->
         <div id="page-settings" class="page">
             <div class="card">
                 <h2>🔑 AIの鍵設定（家計簿・英語共通）</h2>
@@ -408,7 +414,6 @@
             navigator.clipboard.writeText(word).then(() => alert("コピーしました！📋")).catch(() => alert("コピー失敗 😢"));
         }
 
-        // Geminiのレスポンスを100%確実にJSONパースする屈強な関数
         async function callGemini(promptText, hasImage = false) {
             const apiKey = localStorage.getItem('gemini_api_key');
             if(!apiKey) throw new Error("API_KEY_MISSING");
@@ -426,7 +431,7 @@
 
             if(!response.ok) {
                 const errText = await response.text();
-                throw new Error("API_ERROR_STATUS_" + response.status + ": " + errText);
+                throw new Error("API_ERROR_STATUS_" + response.status);
             }
             
             const data = await response.json();
@@ -434,19 +439,13 @@
             
             let rawText = data.candidates[0].content.parts[0].text.trim();
             
-            // JSONの切り出しロジックの強化
             const firstBracket = rawText.indexOf('{');
             const lastBracket = rawText.lastIndexOf('}');
             if (firstBracket !== -1 && lastBracket !== -1) {
                 rawText = rawText.substring(firstBracket, lastBracket + 1);
             }
             
-            try {
-                return JSON.parse(rawText);
-            } catch(jsonErr) {
-                console.error("JSONパースに失敗した生のAIテキスト:", rawText);
-                throw new Error("JSON_PARSE_FAILED");
-            }
+            return JSON.parse(rawText);
         }
 
         // 【1周目】最初のざっくり検索
@@ -474,7 +473,7 @@
             sugSection.style.display = "none";
             document.getElementById('btn-reset').style.display = "block";
 
-            let prompt = `ユーザーは日本のECサイトで「${initialSearchKeyword}」を探しています。より最適な具体的商品を3つに絞り込むために、サイズ、容量、予算、設置タイプなどの希望を深掘りする質問を日本語で1つ作成してください。必ず以下のJSONフォーマットの通りに出力してください。余計な説明は一切含めないでください。
+            let prompt = `ユーザーは日本のECサイトで「${initialSearchKeyword}」に関する何かを探しています。より最適な具体的商品を絞り込むために、サイズ、容量、予算、設置タイプ、機能などの希望を優しく深掘りする質問を日本語で1つ作成してください。必ず以下のJSONフォーマットの通りに出力してください。余計な文章は一切含めないでください。
 {
   "ask_user_for_details": "ここにユーザーへの短い質問文"
 }`;
@@ -496,11 +495,11 @@
                 console.error(e);
                 resultCard.style.display = "none";
                 chatSection.style.display = "block";
-                document.getElementById('ai-chat-question').innerText = `「${initialSearchKeyword}」について、容量やサイズ、設置方法などの具体的なご希望を教えてくださいな 💡\n(システム状況: ${e.message})`;
+                document.getElementById('ai-chat-question').innerText = `「${initialSearchKeyword}」について、容量やサイズ、設置方法などの具体的なご希望を教えてくださいな 💡`;
             }
         }
 
-        // 【2周目】チャットの質問に答えたとき
+        // 【2周目】チャットの質問に答えたとき（AIの負担を究極に減らしたプロンプト）
         async function submitChatDetailAnswer() {
             const ans = document.getElementById('ai-chat-answer').value.trim();
             if(!ans) return alert("条件を入力してくださいな 💡");
@@ -511,30 +510,18 @@
 
             chatSection.style.display = "none";
             resultCard.style.display = "block";
-            resultSummary.innerText = "✨ 条件に合うベストな商品を3つピックアップ中...";
+            resultSummary.innerText = "✨ 条件に合うベストな商品をピックアップ中...";
 
-            // AIが絶対に迷わない最強のプロンプト形式に変更
-            let prompt = `あなたは日本の優秀なショッピングコンサルタントです。
-[探している大カテゴリ]: ${initialSearchKeyword}
-[ユーザーの細かいこだわり条件]: ${ans}
+            let prompt = `ユーザーは「${initialSearchKeyword}」について、「${ans}」というこだわり条件を持っています。
+この条件に合致しそうな、日本で一般的な「具体的な商品ジャンル、メーカー、または代表的なモデル（例: アイリスオーヤマ スリム冷凍庫 85L、三菱電機 ホームフリーザー など）」を3つ提案してください。完璧に現行の正確な型番である必要はありません。イメージが伝わる名称で結構です。
 
-上記を満たす、日本の市場で今リアルに購入できる具体的なメーカー名と型番（または正確な商品名）を「3つ」厳選してください。
-出力は、必ず以下のJSONのテンプレートの空欄を埋める形だけで返してください。余計な文字、マークダウンの装飾、前置きは一切排除してください。
+必ず以下のJSONのテンプレートの空欄を埋める形だけで返してください。前後の余計な挨拶や解説は完全禁止です。
 
 {
   "ai_suggestions": [
-    {
-      "name": "1つ目の具体的なメーカー名と正確な型番・モデル名",
-      "reason": "この商品が選ばれた理由を日本語で短く"
-    },
-    {
-      "name": "2つ目の具体的なメーカー名と正確な型番・モデル名",
-      "reason": "この商品が選ばれた理由を日本語で短く"
-    },
-    {
-      "name": "3つ目の具体的なメーカー名と正確な型番・モデル名",
-      "reason": "この商品が選ばれた理由を日本語で短く"
-    }
+    { "name": "1つ目のメーカー名と商品イメージ名", "reason": "条件に合う理由を日本語で" },
+    { "name": "2つ目のメーカー名と商品イメージ名", "reason": "条件に合う理由を日本語で" },
+    { "name": "3つ目のメーカー名と商品イメージ名", "reason": "条件に合う理由を日本語で" }
   ]
 }`;
 
@@ -545,38 +532,40 @@
                 if (result && result.ai_suggestions && result.ai_suggestions.length > 0) {
                     showSuggestions(result.ai_suggestions);
                 } else {
-                    throw new Error("SUGGESTIONS_EMPTY");
+                    throw new Error("EMPTY");
                 }
             } catch(e) {
-                console.error(e);
+                console.error("AIエラー発生のため、フォールバック（救済措置）に切り替えます:", e);
                 resultCard.style.display = "none";
-                chatSection.style.display = "block";
-                alert(`商品の抽出がうまくできませんでした。\n原因: ${e.message}\n\nもう一度「商品を探してもらう」ボタンを押すか、条件のキーワードを少し変えてみてください！`);
+                
+                // 【超重要】AIがパニックで落ちたら、ユーザーの入力した条件をそのまま使って即時検索できるボタンを身代わりに置く！
+                const fallbackSuggestions = [
+                    { "name": `${initialSearchKeyword} ${ans}`, "reason": "入力いただいた条件をそのまま検索キーワードにして最安値を調べます！" }
+                ];
+                showSuggestions(fallbackSuggestions);
             }
         }
 
-        // おすすめ商品のボタンを表示する
         function showSuggestions(suggestions) {
             const sugSection = document.getElementById('ai-suggestions-section');
             const sugList = document.getElementById('ai-suggestions-list');
             sugSection.style.display = "block";
             
             globalSuggestions = suggestions.map(s => s.name);
-            sugList.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">ご希望にぴったりの商品が見つかりました！気になる商品をタップすると自動で最安値を比較します：</p>`;
+            sugList.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">ご希望にぴったりの候補を作成しました！タップすると自動で最安値を比較します：</p>`;
             
             suggestions.forEach((item, index) => {
                 sugList.innerHTML += `
                     <div class="ai-item">
                         <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
                         <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin: 4px 0 10px 0;">✨ ${item.reason}</span>
-                        <button class="btn-main" style="padding:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectFinalProduct(${index})">この商品の最安値を一発比較する ✨</button>
+                        <button class="btn-main" style="padding:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectFinalProduct(${index})">この条件の最安値を一発比較する ✨</button>
                     </div>
                 `;
             });
             window.scrollTo({ top: sugSection.offsetTop - 20, behavior: 'smooth' });
         }
 
-        // 【3周目】選んだおすすめ商品をタップした時（自動で即時検索）
         function selectFinalProduct(index) {
             const targetProductName = globalSuggestions[index];
             if(targetProductName) {
@@ -586,7 +575,6 @@
             }
         }
 
-        // 【最終段階】完全に特定された商品の価格比較を実行する
         async function startPriceComparison(productName) {
             const resultCard = document.getElementById('result-card');
             const resultSummary = document.getElementById('result-summary');
@@ -670,7 +658,7 @@ ${localPrice ? `[実店舗価格との対抗]: ${localPrice}` : ''}
             } catch(e) {
                 console.error(e);
                 resultSummary.innerText = "❌ 最安値の解析中にエラーが発生しました。";
-                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">一時的にAIとの接続が途切れた可能性があります。原因: ${e.message}</p>`;
+                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">一時的にAIとの接続が途切れた可能性があります。もう一度時間を置いてお試しください。</p>`;
             }
         }
     </script>
