@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ずぼら価格一発比較ツール</title>
     
-    <!-- PWA設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ずぼら比較">
@@ -225,7 +224,6 @@
 
     <div class="container">
         
-        <!-- 🏠 メイン比較画面 -->
         <div id="page-search" class="page active">
             
             <div class="mode-selector">
@@ -253,7 +251,6 @@
             
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
-            <!-- 📊 対話用セクション -->
             <div id="ai-chat-section" class="ai-chat-box" style="display:none; margin-top: 20px;">
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
                 <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
@@ -261,13 +258,11 @@
                 <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatDetailAnswer()">この条件で商品を探してもらう 🔍</button>
             </div>
 
-            <!-- 📊 おすすめ商品提案セクション -->
             <div id="ai-suggestions-section" class="ai-suggestion-box" style="display:none; margin-top: 20px;">
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💡 Geminiのおすすめ商品</div>
                 <div id="ai-suggestions-list"></div>
             </div>
 
-            <!-- 📊 比較結果表示（最終段階） -->
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
                 <div id="result-summary" style="font-size: 0.95rem; line-height: 1.5; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #2d2d2d;"></div>
@@ -275,7 +270,6 @@
             </div>
         </div>
 
-        <!-- 🛡️ 設定・ショップ管理画面 -->
         <div id="page-settings" class="page">
             <div class="card">
                 <h2>🔑 AIの鍵設定（家計簿・英語共通）</h2>
@@ -309,6 +303,7 @@
         let currentMode = 'easy';
         let base64Image = null;
         let globalSuggestions = []; 
+        let initialSearchKeyword = ""; // 最初の検索ワードを隔離保存する変数
 
         let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Lite（アプリ内ショップ）"];
         let blacklist = JSON.parse(localStorage.getItem('akky_shop_blacklist')) || [];
@@ -371,6 +366,7 @@
             document.getElementById('img-preview').style.display = "none";
             base64Image = null;
             globalSuggestions = [];
+            initialSearchKeyword = "";
 
             document.getElementById('ai-chat-section').style.display = "none";
             document.getElementById('ai-suggestions-section').style.display = "none";
@@ -412,7 +408,7 @@
             navigator.clipboard.writeText(word).then(() => alert("コピーしました！📋")).catch(() => alert("コピー失敗 😢"));
         }
 
-        // 通用APIコール関数
+        // 解析をスムーズにするためのクリーニング関数
         async function callGemini(promptText, hasImage = false) {
             const apiKey = localStorage.getItem('gemini_api_key');
             let payloadContents = [{ role: "user", parts: [{ text: promptText }] }];
@@ -431,6 +427,8 @@
             if(!data.candidates || data.candidates.length === 0) throw new Error("NO_CANDIDATES");
             
             let rawText = data.candidates[0].content.parts[0].text.trim();
+            
+            // AIが変なマークダウンを付けても確実にJSONだけを抜き出す処理
             const firstBracket = rawText.indexOf('{');
             const lastBracket = rawText.lastIndexOf('}');
             if (firstBracket !== -1 && lastBracket !== -1) {
@@ -439,7 +437,7 @@
             return JSON.parse(rawText);
         }
 
-        // 【1周目】最初の検索
+        // 【1周目】最初のざっくり検索
         async function startInitialSearch() {
             const textQuery = document.getElementById('search-input').value.trim();
             if(!textQuery && !base64Image) return alert("商品名を入力するか、画像をアップロードしてください！");
@@ -448,6 +446,9 @@
                 startPriceComparison(textQuery);
                 return;
             }
+
+            // 最初の検索ワードを記憶して、入力欄を汚さないようにする
+            initialSearchKeyword = textQuery;
 
             const chatSection = document.getElementById('ai-chat-section');
             const sugSection = document.getElementById('ai-suggestions-section');
@@ -462,11 +463,10 @@
             sugSection.style.display = "none";
             document.getElementById('btn-reset').style.display = "block";
 
-            let prompt = `You are an expert shopping advisor in Japan.\n`;
-            prompt += `The user typed a broad category: "${textQuery}".\n`;
-            prompt += `Please generate a helpful question in Japanese to clarify their preferences (e.g., size, budget, specific functions, installation type).\n`;
-            prompt += `Output MUST be valid JSON only.\n`;
-            prompt += `JSON format:\n{\n  "ask_user_for_details": "ユーザーへの質問内容（日本語）"\n}`;
+            let prompt = `ユーザーは日本のECサイトで「${initialSearchKeyword}」に関する商品を探しています。より最適な具体的商品を3つに絞り込むために、サイズ、容量、予算、設置タイプなどの希望を聞く質問を日本語で1つ作成してください。必ず以下のJSONフォーマットのみを返してください。不要な挨拶や解説文は一切禁止します。
+{
+  "ask_user_for_details": "ここにユーザーへの短い質問文"
+}`;
 
             try {
                 const result = await callGemini(prompt, true);
@@ -485,16 +485,15 @@
                 console.error(e);
                 resultCard.style.display = "none";
                 chatSection.style.display = "block";
-                document.getElementById('ai-chat-question').innerText = `「${textQuery}」について、容量やサイズ、霜取り不要などの具体的なご希望を教えてくださいな 💡`;
+                document.getElementById('ai-chat-question').innerText = `「${initialSearchKeyword}」について、容量やサイズ、設置方法などの具体的なご希望を教えてくださいな 💡`;
             }
         }
 
-        // 【2周目】ユーザーが詳細を返信した時
+        // 【2周目】チャットの質問に答えたとき
         async function submitChatDetailAnswer() {
             const ans = document.getElementById('ai-chat-answer').value.trim();
             if(!ans) return alert("条件を入力してくださいな 💡");
 
-            const textQuery = document.getElementById('search-input').value.trim();
             const chatSection = document.getElementById('ai-chat-section');
             const resultCard = document.getElementById('result-card');
             const resultSummary = document.getElementById('result-summary');
@@ -503,12 +502,19 @@
             resultCard.style.display = "block";
             resultSummary.innerText = "✨ 条件に合うベストな商品を3つピックアップ中...";
 
-            let prompt = `You are a professional product selector in Japan.\n`;
-            prompt += `[Base Category]: ${textQuery}\n`;
-            prompt += `[User's Preferences]: ${ans}\n`;
-            prompt += `Based on these requirements, propose exactly 3 real product models available in Japanese market.\n`;
-            prompt += `Output MUST be valid JSON only.\n`;
-            prompt += `JSON format:\n{\n  "ai_suggestions": [\n    { "name": "Exact Brand and Model Name (e.g., SHARP SJ-D15G)", "reason": "Why this matches in Japanese" }\n  ]\n}`;
+            // プロンプトを緩和し、AIが確実に出力できるように調整
+            let prompt = `日本の家電・商品市場に実在する具体的な商品モデル・型番を3つ提案してください。
+[探しているカテゴリ]: ${initialSearchKeyword}
+[ユーザーのこだわり条件]: ${ans}
+
+必ず以下のJSONフォーマットの構造に当てはめて出力してください。
+{
+  "ai_suggestions": [
+    { "name": "メーカー名と正確な型番・商品名", "reason": "この商品が条件に合う理由（日本語）" },
+    { "name": "メーカー名と正確な型番・商品名", "reason": "この商品が条件に合う理由（日本語）" },
+    { "name": "メーカー名と正確な型番・商品名", "reason": "この商品が条件に合う理由（日本語）" }
+  ]
+}`;
 
             try {
                 const result = await callGemini(prompt, false);
@@ -523,7 +529,7 @@
                 console.error(e);
                 resultCard.style.display = "none";
                 chatSection.style.display = "block";
-                alert("商品の抽出がうまくできませんでした。もう少し具体的なワード（メーカー名や「スリム」「100L」など）を混ぜて返信してみてください！");
+                alert("AIの応答が乱れました。もう一度「商品を探してもらう」を押すか、もう少し文字数を短くして条件を入力してみてください！");
             }
         }
 
@@ -534,14 +540,13 @@
             sugSection.style.display = "block";
             
             globalSuggestions = suggestions.map(s => s.name);
-            sugList.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">ご希望にぴったりの商品が見つかりました！気になる商品をタップすると最安値を比較します：</p>`;
+            sugList.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">ご希望にぴったりの商品が見つかりました！気になる商品をタップすると自動で最安値を比較します：</p>`;
             
             suggestions.forEach((item, index) => {
                 sugList.innerHTML += `
                     <div class="ai-item">
                         <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
                         <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin: 4px 0 10px 0;">✨ ${item.reason}</span>
-                        <!-- 【ここを大修正】タップしたら自動で即時最安値比較関数を呼び出す -->
                         <button class="btn-main" style="padding:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectFinalProduct(${index})">この商品の最安値を一発比較する ✨</button>
                     </div>
                 `;
@@ -549,15 +554,12 @@
             window.scrollTo({ top: sugSection.offsetTop - 20, behavior: 'smooth' });
         }
 
-        // 【3周目★大修正】選んだおすすめ商品をタップした時、そのまま自動で最安値サーチまで走る
+        // 【3周目】選んだおすすめ商品をタップした時（自動で即時検索）
         function selectFinalProduct(index) {
             const targetProductName = globalSuggestions[index];
             if(targetProductName) {
-                // 検索窓に反映
                 document.getElementById('search-input').value = targetProductName;
-                // 提案エリアは閉じる
                 document.getElementById('ai-suggestions-section').style.display = "none";
-                // 【超重要】ボタンをもう一回押させるのではなく、ここで自動で最安値検索を起動する！
                 startPriceComparison(targetProductName);
             }
         }
@@ -574,24 +576,19 @@
             resultList.innerHTML = "";
             document.getElementById('btn-reset').style.display = "block";
 
-            let prompt = `You are a professional price comparison assistant for Japan stores.\n`;
-            prompt += `[Target Exact Product]: ${productName}\n`;
-            prompt += `[User's Regular Shops]: ${whitelist.join(', ')}\n`;
-            prompt += `[BANNED Shops]: ${blacklist.join(', ')} -> NEVER include these.\n`;
-            if(localPrice) prompt += `[User's Local Price]: ${localPrice}\n`;
-            
-            prompt += `\nCRITICAL SYSTEM RULES:\n`;
-            prompt += `1. Provide real market prices and details for this specific product in Japan. No imaginary data.\n`;
-            prompt += `2. Output MUST be valid JSON only.\n`;
-            
-            prompt += `\nJSON structure:\n`;
-            prompt += `{\n`;
-            prompt += `  "verdict": "Conclusion in Japanese comparing online stores.",\n`;
-            prompt += `  "searched_keyword": "${productName}",\n`;
-            prompt += `  "shops": [\n`;
-            prompt += `    { "name": "Shop Name", "is_regular": true, "base_price": "〇〇円", "shipping": "送料無料 または 〇〇円", "points": "特典や還元情報", "direct_search_url": "" }\n`;
-            prompt += `  ]\n`;
-            prompt += `}`;
+            let prompt = `「${productName}」の日本国内での最新の販売価格・送料・ポイント還元情報を調査してください。
+[レギュラー指定ショップ]: ${whitelist.join(', ')}
+[完全に除外するショップ]: ${blacklist.join(', ')}
+${localPrice ? `[実店舗の対抗価格]: ${localPrice}` : ''}
+
+必ず以下のJSON形式のみで出力してください。
+{
+  "verdict": "全体の価格比較の総評（日本語）",
+  "searched_keyword": "${productName}",
+  "shops": [
+    { "name": "ショップ名", "is_regular": true, "base_price": "〇〇円", "shipping": "送料無料 または 〇〇円", "points": "還元情報やセール情報", "direct_search_url": "" }
+  ]
+}`;
 
             try {
                 const result = await callGemini(prompt, false);
@@ -644,7 +641,7 @@
             } catch(e) {
                 console.error(e);
                 resultSummary.innerText = "❌ 最安値の解析中にエラーが発生しました。";
-                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">一時的にAIとの接続が途切れた可能性があります。もう一度ボタンを押してみてください。</p>`;
+                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">一時的にAIとの接続が途切れた可能性があります。時間を置いてもう一度お試しください。</p>`;
             }
         }
     </script>
