@@ -244,7 +244,7 @@
                 </div>
 
                 <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 対抗価格 (あれば)</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 对抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
@@ -253,7 +253,7 @@
             
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
-            <!-- 📊 対話用セクション -->
+            <!-- 📊 对話用セクション -->
             <div id="ai-chat-section" class="ai-chat-box" style="display:none; margin-top: 20px;">
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
                 <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
@@ -499,7 +499,7 @@
             }
         }
 
-        // 【2周目】チャットの質問に答えたとき（AIの負担を究極に減らしたプロンプト）
+        // 【2周目】チャットの質問に答えたとき
         async function submitChatDetailAnswer() {
             const ans = document.getElementById('ai-chat-answer').value.trim();
             if(!ans) return alert("条件を入力してくださいな 💡");
@@ -535,12 +535,20 @@
                     throw new Error("EMPTY");
                 }
             } catch(e) {
-                console.error("AIエラー発生のため、フォールバック（救済措置）に切り替えます:", e);
+                console.error("AIエラーまたはパース失敗のため、重複を排除したスッキリ検索候補を作ります:", e);
                 resultCard.style.display = "none";
                 
-                // 【超重要】AIがパニックで落ちたら、ユーザーの入力した条件をそのまま使って即時検索できるボタンを身代わりに置く！
+                // 【バグ修正】ダブりをなくして、スペース区切りのシンプルな検索用ワードに整形
+                let combinedWord = initialSearchKeyword;
+                if (!ans.includes(initialSearchKeyword)) {
+                    combinedWord = `${initialSearchKeyword} ${ans}`;
+                } else {
+                    combinedWord = ans;
+                }
+                
+                // 15文字程度で綺麗にトリミングして実用的なキーワードにする
                 const fallbackSuggestions = [
-                    { "name": `${initialSearchKeyword} ${ans}`, "reason": "入力いただいた条件をそのまま検索キーワードにして最安値を調べます！" }
+                    { "name": combinedWord, "reason": "入力いただいた条件を掛け合わせてダイレクトに最安値を調べます！" }
                 ];
                 showSuggestions(fallbackSuggestions);
             }
