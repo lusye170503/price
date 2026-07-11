@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ずぼら価格一発比較ツール</title>
     
+    <!-- PWA設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ずぼら比較">
@@ -224,6 +225,7 @@
 
     <div class="container">
         
+        <!-- 🏠 メイン比較画面 -->
         <div id="page-search" class="page active">
             
             <div class="mode-selector">
@@ -242,7 +244,7 @@
                 </div>
 
                 <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗の対抗価格 (あれば)</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 対抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
@@ -251,6 +253,7 @@
             
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
+            <!-- 📊 対話用セクション -->
             <div id="ai-chat-section" class="ai-chat-box" style="display:none; margin-top: 20px;">
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
                 <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
@@ -258,6 +261,7 @@
                 <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatAnswer()">この条件を伝えて進める 🔍</button>
             </div>
 
+            <!-- 📊 比較結果表示 -->
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
                 
@@ -267,6 +271,7 @@
             </div>
         </div>
 
+        <!-- 🛡️ 設定・ショップ管理画面 -->
         <div id="page-settings" class="page">
             <div class="card">
                 <h2>🔑 AIの鍵設定（家計簿・英語共通）</h2>
@@ -299,6 +304,7 @@
     <script>
         let currentMode = 'easy';
         let base64Image = null;
+        let globalSuggestions = []; // 安全のためにグローバルで値を保持
 
         let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Lite（アプリ内ショップ）"];
         let blacklist = JSON.parse(localStorage.getItem('akky_shop_blacklist')) || [];
@@ -360,6 +366,7 @@
             if (fileInput) fileInput.value = ""; 
             document.getElementById('img-preview').style.display = "none";
             base64Image = null;
+            globalSuggestions = [];
 
             document.getElementById('ai-chat-section').style.display = "none";
             document.getElementById('result-card').style.display = "none";
@@ -371,10 +378,13 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function autoSearchWithSuggestedWord(word) {
-            document.getElementById('search-input').value = word;
-            document.getElementById('ai-chat-section').style.display = "none"; 
-            startComparison();
+        // 引数ではなくインデックス番号で指定することで、引用符のエラーを完全に撲滅
+        function selectSuggestion(index) {
+            if(globalSuggestions[index]) {
+                document.getElementById('search-input').value = globalSuggestions[index];
+                document.getElementById('ai-chat-section').style.display = "none"; 
+                startComparison();
+            }
         }
 
         function submitChatAnswer() {
@@ -501,7 +511,7 @@
                 const data = await response.json();
                 let rawText = data.candidates[0].content.parts[0].text.trim();
                 
-                // 【最強のJSON抽出ロジック】 文字列のどこかに { と } があれば、そこだけを完全にくり抜く
+                // 強力なJSON切り出し
                 const firstBracket = rawText.indexOf('{');
                 const lastBracket = rawText.lastIndexOf('}');
                 if (firstBracket !== -1 && lastBracket !== -1) {
@@ -510,7 +520,7 @@
 
                 const result = JSON.parse(rawText);
 
-                // 対話モードの質問判定
+                // 対話モード質問判定
                 if (result.ask_user_for_details && result.ask_user_for_details.trim() !== "") {
                     resultCard.style.display = "none"; 
                     chatSection.style.display = "block";
@@ -519,24 +529,30 @@
                     return;
                 }
 
-                // 通常の価格比較表示処理
                 chatSection.style.display = "none";
 
+                // おすすめ候補の出力処理
                 if (result.ai_suggestions && result.ai_suggestions.length > 0) {
+                    globalSuggestions = result.ai_suggestions.map(item => item.name); // 配列をグローバルに退避
                     aiSuggestions.style.display = "block";
-                    aiSuggestions.innerHTML = `
+                    
+                    let sugHtml = `
                         <div class="ai-suggestion-box">
                             💡 <strong>Geminiのおすすめ3選</strong><br>
-                            <span style="font-size:0.8rem; color:var(--text-muted);">ここから選ぶと一発でピンポイント最安値が出ます！</span>
-                            ${result.ai_suggestions.map(item => `
-                                <div class="ai-item">
-                                    <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
-                                    <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin-top:4px;">✨ ${item.reason}</span>
-                                    <button class="btn-main" style="padding:10px; margin-top:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="autoSearchWithSuggestedWord('${item.name.replace(/'/g, "\\'")}')">この最安値を一発比較する ✨</button>
-                                </div>
-                            `).join('')}
-                        </div>
+                            <span style="font-size:0.8rem; color:var(--text-muted);">候補を選ぶと一発でピンポイント最安値が出ます！</span>
                     `;
+                    
+                    for(let i=0; i < result.ai_suggestions.length; i++) {
+                        sugHtml += `
+                            <div class="ai-item">
+                                <strong style="color:var(--accent-color); font-size:0.95rem;">${result.ai_suggestions[i].name}</strong><br>
+                                <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin-top:4px;">✨ ${result.ai_suggestions[i].reason}</span>
+                                <button class="btn-main" style="padding:10px; margin-top:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectSuggestion(${i})">この最安値を一発比較する ✨</button>
+                            </div>
+                        `;
+                    }
+                    sugHtml += `</div>`;
+                    aiSuggestions.innerHTML = sugHtml;
                 }
 
                 const detectedWord = result.searched_keyword || textQuery || "商品最安値";
