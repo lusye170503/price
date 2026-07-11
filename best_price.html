@@ -300,7 +300,7 @@
                 </div>
 
                 <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 対抗価格 (あれば)</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗の対抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
@@ -526,48 +526,37 @@
             document.getElementById('btn-reset').style.display = "none";
 
             let prompt = `You are a professional price comparison assistant for Akky.\n`;
-            prompt += `[Search Mode]: ${currentMode === 'easy' ? 'Casual search (find target and analyze market prices)' : 'Strict comparison (exact model/JAN number check for the lowest price)'}\n`;
+            prompt += `[Search Mode]: ${currentMode === 'easy' ? 'Casual search' : 'Strict comparison'}\n`;
             prompt += `[User's Safe Regular Shops (Whitelist)]: ${whitelist.join(', ')}\n`;
-            prompt += `[BANNED Shops (Blacklist)]: ${blacklist.join(', ')} -> NEVER include these stores in the results.\n`;
+            prompt += `[BANNED Shops (Blacklist)]: ${blacklist.join(', ')} -> NEVER include these stores.\n`;
             
             if(textQuery) prompt += `[Target Product/Keyword]: ${textQuery}\n`;
-            if(localPrice) prompt += `[User's Local/Chirar Price Input]: ${localPrice}\n`;
+            if(localPrice) prompt += `[User's Local Price Input]: ${localPrice}\n`;
             
             prompt += `\nCRITICAL SEARCH & PRICE RULES:\n`;
-            prompt += `1. NEVER use "Effective Price" (実質価格) after point subtractions. Point calculations must be separated!\n`;
-            prompt += `2. You MUST separate the Base Product Price (本体価格) and Shipping Fee (送料). Display them clearly.\n`;
-            prompt += `3. If you find unknown shops outside the whitelist, tag them as unknown so Akky can decide.\n`;
-            prompt += `4. Extract the single best/cleanest Japanese product text or model name used for your internal market search and provide it as "searched_keyword".\n`;
+            prompt += `1. NEVER use "Effective Price" (実質価格) after point subtractions.\n`;
+            prompt += `2. Separate Base Product Price (本体価格) and Shipping Fee (送料) clearly.\n`;
+            prompt += `3. Extract the single best Japanese product text or model name as "searched_keyword".\n`;
+            prompt += `4. URL GENERATION RULE: For Yodobashi Camera ("ヨドバシカメラ"), direct_search_url MUST strictly be "https://www.yodobashi.com/?word=" appended with the URL-encoded searched_keyword.\n`;
+            prompt += `5. OFFICIAL BRAND SITES RULE: If a specific brand is identified (e.g. Iris Ohyama), you MUST try to find and include the manufacturer's official online store (e.g., "アイリスプラザ" or official site) in the "shops" results.\n`;
+            prompt += `6. RECENT SALE PRICES: Try to look for recent time-sale, Prime Sale, dynamic sale event prices or dynamic points back information.\n`;
+            prompt += `7. BROAD KEYWORDS: If the keyword is broad (e.g., "セカンド冷凍庫"), provide 3 specific popular product suggestions in the "ai_suggestions" array.\n`;
             
-            // 重要：ヨドバシカメラのURLルール、および公式サイト・セール価格のルールを追加
-            prompt += `5. URL GENERATION RULE FOR YODOBASHI: For Yodobashi Camera ("ヨドバシカメラ"), the direct_search_url MUST strictly follow this pattern: "https://www.yodobashi.com/?word=" appended with the URL-encoded 'searched_keyword'. Do NOT use any other URL format for Yodobashi.\n`;
-            prompt += `6. OFFICIAL BRAND SITES RULE: If the search keyword is broad or a specific brand is identified (e.g. Iris Ohyama, Staub, Le Creuset), you MUST try to search and include the manufacturer's official online store (e.g., "アイリスプラザ" for Iris Ohyama) in the "shops" results if they have stock or special offers, even if it is not in the whitelist.\n`;
-            prompt += `7. RECENT SALE PRICES: Try to find and reflect the most recent time-sale, Prime Sale, or super-sale dynamic pricing and campaign point back information available in your knowledge/live-search for all shops.\n`;
-            
-            prompt += `8. IMPORTANT SPECIAL RULE FOR BROAD KEYWORDS: If the keyword is too vague or generic (e.g., "セカンド冷凍庫", "鋳物鍋 20cm") and doesn't specify a brand or exact model, you MUST provide 3 specific popular/recommended product suggestions in the "ai_suggestions" array so Akky can choose one. If the keyword is specific enough, leave the array empty.\n`;
-            
-            prompt += `\nOutput MUST be raw JSON format only (No markdown code blocks, just pure JSON object):\n`;
+            prompt += `\nOutput MUST be raw JSON format only. Do NOT wrap in markdown blocks, just pure JSON object:\n`;
             prompt += `{\n`;
             prompt += `  "verdict": "A brief conclusion in Japanese.",\n`;
-            prompt += `  "searched_keyword": "Geminiが特定・使用した、コピペに最適な綺麗な商品名・型番キーワード（日本語OK）",\n`;
+            prompt += `  "searched_keyword": "綺麗な商品名・型番キーワード",\n`;
             prompt += `  "ai_suggestions": [\n`;
-            prompt += `    {\n`;
-            prompt += `      "name": "具体的なおすすめ商品名1",\n`;
-            prompt += `      "reason": "おすすめの理由や特徴をサクッと一言"\n`;
-            prompt += `    }\n`;
+            prompt += `    { "name": "おすすめ商品名1", "reason": "サクッと一言" }\n`;
             prompt += `  ],\n`;
             prompt += `  "shops": [\n`;
             prompt += `    {\n`;
             prompt += `      "name": "Shop Name",\n`;
-            prompt += `      "is_regular": true/false,\n`;
-            prompt += `      "base_price": "本体価格(数字のみ or 税込表記)",\n`;
-            prompt += `      "shipping": "送料情報(無料、または〇〇円)",\n`;
-            prompt += `      "points": "ポイント情報(〇〇pt還元など)",\n`;
-            prompt += `      "direct_search_url": "The direct URL-encoded search results page URL for this item on this store"\n`;
-            
-            // fallback用の汎用サーチURL生成ロジック
-            const detectedWordPlaceholder = textQuery || "商品最安値";
-            
+            prompt += `      "is_regular": true,\n`;
+            prompt += `      "base_price": "本体価格",\n`;
+            prompt += `      "shipping": "送料情報",\n`;
+            prompt += `      "points": "ポイント情報・セール情報",\n`;
+            prompt += `      "direct_search_url": "URL-encoded search page URL"\n`;
             prompt += `    }\n`;
             prompt += `  ]\n`;
             prompt += `}`;
@@ -579,7 +568,7 @@
                 partsArray.push({
                     inline_data: { mime_type: "image/jpeg", data: base64Image }
                 });
-                partsArray.push({ text: "Analyze this image/screenshot to identify the product model/name and include it in the price comparison." });
+                partsArray.push({ text: "Analyze this image/screenshot to identify the product." });
             }
 
             payloadContents.push({ role: "user", parts: partsArray });
@@ -632,7 +621,6 @@
                         const isRegular = whitelist.includes(shop.name) || shop.is_regular;
                         const tagClass = isRegular ? 'tag-regular' : 'tag-unknown';
                         
-                        // 公式サイトのときはタグの文言を少しわかりやすく
                         let tagLabel = isRegular ? '📌 レギュラーショップ' : '⚠️ 要確認ショップ';
                         if (shop.name.includes("公式") || shop.name.includes("プラザ")) {
                             tagLabel = '👑 ブランド公式ストア';
@@ -640,7 +628,6 @@
                         
                         const itemClass = isRegular ? '' : 'alert-shop';
 
-                        // ヨドバシカメラのURL生成バグに対するフロント側での二重セーフティ
                         let shopUrl = shop.direct_search_url;
                         if (shop.name === "ヨドバシカメラ") {
                             shopUrl = `https://www.yodobashi.com/?word=${encodeURIComponent(detectedWord)}`;
