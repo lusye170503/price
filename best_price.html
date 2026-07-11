@@ -255,7 +255,7 @@
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
                 <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
                 <textarea id="ai-chat-answer" placeholder="例: 100L前後で、スリムタイプ。霜取り不要がいい！" rows="2" style="background:#111; border:1px solid #444; width:100%; color:#fff; padding:10px; border-radius:8px; box-sizing:border-box; font-family:inherit;"></textarea>
-                <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatAnswer()">この条件で再検索する 🔍</button>
+                <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatAnswer()">この条件を伝えて進める 🔍</button>
             </div>
 
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
@@ -299,7 +299,6 @@
     <script>
         let currentMode = 'easy';
         let base64Image = null;
-        let lastQueryForChat = ""; 
 
         let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Lite（アプリ内ショップ）"];
         let blacklist = JSON.parse(localStorage.getItem('akky_shop_blacklist')) || [];
@@ -381,8 +380,6 @@
         function submitChatAnswer() {
             const ans = document.getElementById('ai-chat-answer').value.trim();
             if(!ans) return alert("条件を入力してくださいな 💡");
-            
-            // 元のワードにユーザーのこだわり条件をガッチャンコして再検索
             const orig = document.getElementById('search-input').value;
             document.getElementById('search-input').value = `${orig} ${ans}`;
             document.getElementById('ai-chat-section').style.display = "none";
@@ -469,17 +466,17 @@
             if(localPrice) prompt += `[User's Local Price]: ${localPrice}\n`;
             
             prompt += `\nCRITICAL SYSTEM RULES:\n`;
-            prompt += `1. Output MUST be a valid JSON object ONLY. NEVER wrap it in markdown code blocks like \`\`\`json ... \`\`\`. Start with { and end with } directly.\n`;
-            prompt += `2. If the user's keyword is very broad or generic (e.g., "冷凍庫", "サブ冷凍庫", "掃除機") and lacks size, capacity, or specific needs, you MUST fill the "ask_user_for_details" field with a helpful question in Japanese asking about size, placement, or features, and leave the "shops" array empty. Do not perform price comparison yet.\n`;
-            prompt += `3. If the keyword is specific enough, leave "ask_user_for_details" empty and fill "shops" and "ai_suggestions" (3 hot specific model recommendations) properly.\n`;
+            prompt += `1. Output MUST be a valid JSON object ONLY. Start with { and end with } directly.\n`;
+            prompt += `2. If the user's keyword is very broad or generic (e.g., "冷凍庫", "サブ冷凍庫", "掃除機") and lacks size, capacity, or specific parameters, you MUST fill the "ask_user_for_details" field with a helpful question in Japanese asking about size, placement, or features, and leave the "shops" array empty. Do not perform price comparison yet.\n`;
+            prompt += `3. If the keyword contains specific numbers, brands, or model details, leave "ask_user_for_details" empty and fill "shops" and "ai_suggestions" (3 hot specific model recommendations) properly.\n`;
             prompt += `4. YODOBASHI LINK: direct_search_url for "ヨドバシカメラ" MUST be exactly "https://www.yodobashi.com/?word=" + URL-encoded searched_keyword.\n`;
             prompt += `5. Include official brand sites (e.g., アイリスプラザ) if applicable. Reflect recent prime/time sale prices.\n`;
             
             prompt += `\nJSON structure to follow strictly:\n`;
             prompt += `{\n`;
-            prompt += `  "ask_user_for_details": "If keyword is too broad, write a question here. Otherwise, leave empty \\"\\".",\n`;
+            prompt += `  "ask_user_for_details": "Question string if broad, otherwise \\"\\"",\n`;
             prompt += `  "verdict": "A brief conclusion in Japanese.",\n`;
-            prompt += `  "searched_keyword": "Best refined single product name string for clipboard copy",\n`;
+            prompt += `  "searched_keyword": "Best refined single product name string",\n`;
             prompt += `  "ai_suggestions": [\n`;
             prompt += `    { "name": "Specific Model Name 1", "reason": "Short reason" }\n`;
             prompt += `  ],\n`;
@@ -504,14 +501,16 @@
                 const data = await response.json();
                 let rawText = data.candidates[0].content.parts[0].text.trim();
                 
-                // 強力なマークダウン剥ぎ取りクリーナー（バグ絶対防止用）
-                if (rawText.startsWith("```")) {
-                    rawText = rawText.replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
+                // 【最強のJSON抽出ロジック】 文字列のどこかに { と } があれば、そこだけを完全にくり抜く
+                const firstBracket = rawText.indexOf('{');
+                const lastBracket = rawText.lastIndexOf('}');
+                if (firstBracket !== -1 && lastBracket !== -1) {
+                    rawText = rawText.substring(firstBracket, lastBracket + 1);
                 }
 
                 const result = JSON.parse(rawText);
 
-                // もしワードがざっくりしていて、AIから質問が返ってきた場合（対話モード起動）
+                // 対話モードの質問判定
                 if (result.ask_user_for_details && result.ask_user_for_details.trim() !== "") {
                     resultCard.style.display = "none"; 
                     chatSection.style.display = "block";
