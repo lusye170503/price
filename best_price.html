@@ -259,7 +259,7 @@
                 </div>
 
                 <div style="margin-top: 12px; border-top: 1px dashed #333; padding-top: 10px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗の対抗価格 (あれば)</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 対抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
@@ -427,6 +427,16 @@
             }
         }
 
+        // 🆕 1タップでクリップボードにコピーする関数
+        function copyKeyword() {
+            const word = document.getElementById('target-word').innerText;
+            navigator.clipboard.writeText(word).then(() => {
+                alert("検索ワードをコピーしました！ショップで貼り付けてね 📋");
+            }).catch(err => {
+                alert("コピーに失敗しました、手動で選択してください 😢");
+            });
+        }
+
         async function startComparison() {
             const apiKey = localStorage.getItem('gemini_api_key');
             if(!apiKey) return alert("⚙️設定タブからAPIキーを設定してください。");
@@ -459,12 +469,14 @@
             prompt += `2. You MUST separate the Base Product Price (本体価格) and Shipping Fee (送料). Display them clearly.\n`;
             prompt += `3. If you find unknown shops outside the whitelist, tag them as unknown so Akky can decide.\n`;
             
-            // 🆕 Gemini自身に直接エンコード済みの検索結果URLを作らせる指示を追加
-            prompt += `4. For each shop, generate a direct search results URL for this product on that specific store. Make sure the search query in the URL is properly URL-encoded (e.g., spaces converted to %20 or +, Japanese text encoded correctly). For unknown stores, use a Google Shopping search URL with the query encoded.\n`;
+            // 🆕 最適な「検索テキスト」自体をJSONの中に抽出させる指示を追加
+            prompt += `4. Extract the single best/cleanest Japanese product text or model name used for your internal market search and provide it as "searched_keyword".\n`;
+            prompt += `5. For each shop, generate a direct search results URL for this product on that specific store. Make sure the search query in the URL is properly URL-encoded (e.g., spaces converted to %20 or +, Japanese text encoded correctly).\n`;
             
             prompt += `\nOutput MUST be raw JSON format only (No markdown code blocks, just pure JSON object):\n`;
             prompt += `{\n`;
             prompt += `  "verdict": "A brief conclusion in Japanese (e.g., 'ネットのAmazonが送料込みでも一番安いです！')",\n`;
+            prompt += `  "searched_keyword": "Geminiが特定・使用した、コピペに最適な綺麗な商品名・型番キーワード（日本語OK）",\n`;
             prompt += `  "shops": [\n`;
             prompt += `    {\n`;
             prompt += `      "name": "Shop Name",\n`;
@@ -472,7 +484,7 @@
             prompt += `      "base_price": "本体価格(数字のみ or 税込表記)",\n`;
             prompt += `      "shipping": "送料情報(無料、または〇〇円)",\n`;
             prompt += `      "points": "ポイント情報(〇〇pt還元など)",\n`;
-            prompt += `      "direct_search_url": "The direct URL-encoded search results page URL for this item on this store (e.g., 'https://www.amazon.co.jp/s?k=Staub%2026cm' or 'https://search.rakuten.co.jp/search/mall/Staub/')"\n`;
+            prompt += `      "direct_search_url": "The direct URL-encoded search results page URL for this item on this store"\n`;
             prompt += `    }\n`;
             prompt += `  ]\n`;
             prompt += `}`;
@@ -505,7 +517,17 @@
                 rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
                 const result = JSON.parse(rawText);
 
-                resultSummary.innerHTML = `📢 ズバッと結論：<br><span style="color:#fff; font-weight:normal;">${result.verdict}</span>`;
+                // 🆕 結論と一緒に、1タップでコピーできる「参考検索ワード」を表示させるUIにリフォーム
+                const detectedWord = result.searched_keyword || textQuery || "商品最安値";
+                resultSummary.innerHTML = `
+                    📢 ズバッと結論：<br><span style="color:#fff; font-weight:normal;">${result.verdict}</span>
+                    <div style="margin-top: 12px; padding: 10px; background: #161616; border-radius: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
+                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;">
+                            📋 <span style="color:var(--text-muted);">参考ワード:</span> <strong id="target-word" style="color:var(--accent-color);">${detectedWord}</strong>
+                        </div>
+                        <button onclick="copyKeyword()" style="width:auto; margin:0; padding:6px 12px; font-size:0.75rem; background:#444; border:none; border-radius:6px; color:#fff; font-weight:bold; cursor:pointer; flex-shrink:0;">コピー</button>
+                    </div>
+                `;
 
                 if(result.shops && result.shops.length > 0) {
                     resultList.innerHTML = result.shops.map(shop => {
@@ -516,8 +538,7 @@
                         const tagLabel = isRegular ? '📌 いつものショップ' : '⚠️ 初見・要確認';
                         const itemClass = isRegular ? '' : 'alert-shop';
 
-                        // 🆕 Geminiが作ってきた完璧なダイレクトURLを採用（無ければフォールバック）
-                        const shopUrl = shop.direct_search_url || `https://www.google.com/search?q=${encodeURIComponent(textQuery || '最安値')}`;
+                        const shopUrl = shop.direct_search_url || `https://www.google.com/search?q=${encodeURIComponent(detectedWord)}`;
 
                         let actionButtons = '';
                         if (!isRegular) {
