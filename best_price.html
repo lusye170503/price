@@ -5,60 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ずぼら価格一発比較ツール</title>
     
+    <!-- PWA設定（ホーム画面追加用） -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ずぼら比較">
     
     <style>
         :root {
-            --primary-color: #e50914; /* パッと目を引く比較ボタン用 */
-            --accent-color: #ffb423; /* 星やハイライト用 */
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --text-muted: #888888;
-            --shop-safe: #2e6930;
-            --shop-unknown: #444444;
-            --link-color: #00a8ff; /* リンクボタン用の青 */
+            --primary-color: #d4af37; /* 洗練された大人のシャンパンゴールド */
+            --primary-hover: #bda030;
+            --accent-color: #e67e22; /* 鋳物鍋にも映える深みのあるコッパーオレンジ */
+            --bg-color: #1a1a1a; /* 高級感のあるシックなダークチャコール */
+            --card-bg: #242424; /* 階層が綺麗に見えるエレガントなグレー */
+            --text-color: #f5f5f7; /* Appleライクな洗練された白 */
+            --text-muted: #9e9e9e; /* 控えめで上品なグレー */
+            --shop-safe: #34495e; /* レギュラーショップ用の落ち着いたネイビー */
+            --shop-unknown: #4a3737; /* 初見用の品のあるくすみレッド */
+            --link-color: #5dade2; /* リンク用のスマートなライトブルー */
+            --ai-bg: #1c2833; /* AI相談室用の深みのあるディープブルー */
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 0;
             padding-bottom: 80px;
             -webkit-tap-highlight-color: transparent;
+            letter-spacing: 0.03em;
         }
 
         header {
             background-color: var(--card-bg);
-            padding: 20px 15px 15px 15px;
+            padding: 22px 15px 18px 15px;
             text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--accent-color);
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--primary-color);
             border-bottom: 1px solid #2d2d2d;
+            letter-spacing: 0.05em;
         }
 
         .container { padding: 15px; }
 
         .card {
             background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 14px;
+            padding: 18px;
             margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border: 1px solid #2e2e2e;
         }
 
         h2 {
             margin-top: 0;
-            font-size: 1rem;
-            color: var(--accent-color);
-            border-left: 4px solid var(--accent-color);
-            padding-left: 8px;
-            margin-bottom: 12px;
+            font-size: 0.95rem;
+            color: var(--primary-color);
+            border-left: 3px solid var(--primary-color);
+            padding-left: 10px;
+            margin-bottom: 14px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
         }
 
         .page { display: none; }
@@ -66,135 +74,169 @@
 
         input, textarea, button, select {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             margin: 8px 0;
-            border-radius: 8px;
-            border: 1px solid #333;
-            background-color: #2a2a2a;
+            border-radius: 10px;
+            border: 1px solid #3a3a3a;
+            background-color: #1e1e1e;
             color: #fff;
-            font-size: 1rem;
+            font-size: 0.95rem;
             box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        input:focus {
+            border-color: var(--primary-color);
+            outline: none;
         }
 
         /* モード切り替え用 */
         .mode-selector {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             margin-bottom: 15px;
         }
         .mode-btn {
             flex: 1;
-            background-color: #252525;
+            background-color: #222;
             color: var(--text-muted);
             border: 1px solid #333;
             padding: 12px 5px;
             font-size: 0.85rem;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             text-align: center;
+            line-height: 1.4;
         }
         .mode-btn.active {
-            background-color: #2a2a2a;
-            color: var(--accent-color);
-            border-color: var(--accent-color);
+            background-color: #2c2c2c;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
             font-weight: bold;
         }
 
         button.btn-main {
             background-color: var(--primary-color);
-            color: #fff;
+            color: #111; /* ゴールド背景なので文字はダークにして視認性UP */
             border: none;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             cursor: pointer;
-            padding: 15px;
-            box-shadow: 0 4px 10px rgba(229, 9, 20, 0.4);
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+            border-radius: 10px;
+            letter-spacing: 0.05em;
         }
-        button.btn-main:active { opacity: 0.8; }
+        button.btn-main:active { background-color: var(--primary-hover); }
 
         button.btn-sub {
-            background-color: #444;
-            color: #fff;
+            background-color: #3a3a3a;
+            color: #ddd;
             border: none;
-            font-size: 0.85rem;
-            padding: 8px 12px;
+            font-size: 0.8rem;
+            padding: 8px 14px;
             width: auto;
             margin: 4px;
-            border-radius: 6px;
+            border-radius: 8px;
+            cursor: pointer;
         }
+        button.btn-sub:active { background-color: #4a4a4a; }
 
         /* リセットボタン用 */
         button.btn-clear {
-            background-color: #333;
-            color: #ccc;
-            border: 1px solid #444;
+            background-color: #282828;
+            color: #bbb;
+            border: 1px solid #3a3a3a;
             font-weight: normal;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             cursor: pointer;
             padding: 12px;
             margin-top: 10px;
+            border-radius: 10px;
         }
-        button.btn-clear:active { background-color: #222; }
+        button.btn-clear:active { background-color: #1e1e1e; }
 
         /* リンクボタン用スタイル */
         .btn-link {
-            background-color: var(--link-color) !important;
+            background-color: #34495e !important;
             color: #fff !important;
-            font-weight: bold;
+            font-weight: 600;
             text-decoration: none;
             display: inline-block;
-            padding: 8px 14px;
-            border-radius: 6px;
+            padding: 10px 16px;
+            border-radius: 8px;
             font-size: 0.85rem;
-            border: none;
+            border: 1px solid #566573;
             cursor: pointer;
+            text-align: center;
+        }
+        .btn-link:active { background-color: #2c3e50 !important; }
+
+        /* AIおすすめセクション */
+        .ai-suggestion-box {
+            background: var(--ai-bg);
+            border: 1px solid #2e4053;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+        .ai-item {
+            background: #151d24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid var(--primary-color);
         }
 
         /* 結果表示のデザイン */
         .result-item {
-            background: #161616;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
+            background: #1c1c1c;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--shop-safe);
+            border: 1px solid #2c2c2c;
             border-left: 4px solid var(--shop-safe);
         }
         .result-item.alert-shop {
-            border-left-color: #b83b5e;
+            border-left-color: #78281f;
+            background: #211a1a;
         }
         .shop-tag {
             display: inline-block;
             font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 4px;
+            padding: 3px 8px;
+            border-radius: 5px;
             font-weight: bold;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
         }
-        .tag-regular { background: #2e6930; color: #fff; }
-        .tag-unknown { background: #b83b5e; color: #fff; }
+        .tag-regular { background: #2e4053; color: #ebf5fb; }
+        .tag-unknown { background: #78281f; color: #ffdac1; }
 
         .price-large {
-            font-size: 1.4rem;
-            font-weight: bold;
+            font-size: 1.35rem;
+            font-weight: 700;
             color: #fff;
         }
         .shipping-text {
             font-size: 0.85rem;
-            color: #ff7675;
-            margin-left: 10px;
+            color: #e67e22;
+            margin-left: 12px;
         }
         .points-text {
             font-size: 0.85rem;
-            color: #eccc68;
-            margin-top: 4px;
+            color: #f4d03f;
+            margin-top: 6px;
         }
 
         /* 画像プレビュー */
         #img-preview {
             max-width: 100%;
             max-height: 150px;
-            border-radius: 8px;
-            margin-top: 8px;
+            border-radius: 10px;
+            margin-top: 10px;
             display: none;
+            border: 1px solid #333;
         }
 
         /* ナビゲーションバー */
@@ -218,72 +260,87 @@
             font-size: 0.75rem;
             text-decoration: none;
             cursor: pointer;
+            transition: color 0.2s ease;
         }
         .nav-item.active {
-            color: var(--accent-color);
+            color: var(--primary-color);
             font-weight: bold;
         }
         .nav-icon {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
         .list-box {
-            background: #161616;
-            padding: 10px;
-            border-radius: 8px;
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 10px;
             font-size: 0.9rem;
+            border: 1px solid #2d2d2d;
         }
         .list-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #2d2d2d;
+        }
+        .list-item:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
 <body>
 
-    <header>🔍 あっきーのずぼら価格一発比較</header>
+    <header>✨ あっきーのずぼら価格一発比較</header>
 
     <div class="container">
         
+        <!-- 🏠 メイン比較画面 -->
         <div id="page-search" class="page active">
             
+            <!-- 🔍 検索モード選択 -->
             <div class="mode-selector">
-                <div id="m-easy" class="mode-btn active" onclick="setSearchMode('easy')">🐢 ふんわり商品名<br>(探す・迷い中用)</div>
+                <div id="m-easy" class="mode-btn active" onclick="setSearchMode('easy')">🕰️ ふんわり検索<br>(探す・迷い中用)</div>
                 <div id="m-strict" class="mode-btn" onclick="setSearchMode('strict')">🎯 型番でカッチリ<br>(最安値指名買い)</div>
             </div>
 
+            <!-- 📝 入力エリア -->
             <div class="card">
                 <h2>🛒 何をくらべる？</h2>
                 <input type="text" id="search-input" placeholder="例: Staub ココット 26cm チェリーレッド">
                 
-                <div style="margin-top: 12px; border-top: 1px dashed #333; padding-top: 10px;">
+                <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
                     <span style="font-size: 0.8rem; color: var(--text-muted);">📸 画像やスクショから商品特定 (Geminiの目)</span>
                     <input type="file" id="image-file" accept="image/*" onchange="previewImage(this)">
                     <img id="img-preview" alt="プレビュー">
                 </div>
 
-                <div style="margin-top: 12px; border-top: 1px dashed #333; padding-top: 10px;">
+                <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
                     <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗の対抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
 
-            <button class="btn-main" id="btn-submit" onclick="startComparison();">最安値を一発比較する 🚀</button>
+            <button class="btn-main" id="btn-submit" onclick="startComparison();">最安値を一発比較する ✨</button>
             
+            <!-- リセットボタン（最初は非表示） -->
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
+            <!-- 📊 比較結果表示 -->
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
-                <div id="result-summary" style="font-size: 1rem; font-weight: bold; color: var(--accent-color); margin-bottom: 15px; padding: 10px; background: #252525; border-radius: 6px;"></div>
+                
+                <!-- 🤖 AIのふんわりおすすめ提案コーナー -->
+                <div id="ai-suggestions" style="display:none;"></div>
+
+                <div id="result-summary" style="font-size: 0.95rem; line-height: 1.5; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #2d2d2d;"></div>
                 <div id="result-list"></div>
             </div>
         </div>
 
+        <!-- 🛡️ 設定・ショップ管理画面 -->
         <div id="page-settings" class="page">
             <div class="card">
                 <h2>🔑 AIの鍵設定（家計簿・英語共通）</h2>
@@ -310,9 +367,10 @@
 
     </div>
 
+    <!-- ナビバー -->
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchTab('search', this);"><span class="nav-icon">🔍</span>一発比較</div>
-        <div class="nav-item" onclick="switchTab('settings', this);"><span class="nav-icon">⚙️</span>ショップ管理</div>
+        <div class="nav-item" onclick="switchTab('settings', this);"><span class="nav-icon">⚙️</span>管理</div>
     </div>
 
     <script>
@@ -391,11 +449,18 @@
             base64Image = null;
 
             document.getElementById('result-card').style.display = "none";
+            document.getElementById('ai-suggestions').style.display = "none";
+            document.getElementById('ai-suggestions').innerHTML = "";
             document.getElementById('result-summary').innerHTML = "";
             document.getElementById('result-list').innerHTML = "";
             document.getElementById('btn-reset').style.display = "none";
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function autoSearchWithSuggestedWord(word) {
+            document.getElementById('search-input').value = word;
+            startComparison();
         }
 
         function renderShopLists() {
@@ -406,7 +471,7 @@
                 blContainer.innerHTML = blacklist.map((shop, i) => `
                     <div class="list-item">
                         <span>❌ ${shop}</span>
-                        <button class="btn-sub" style="background:#8b0000; padding:4px 8px; margin:0;" onclick="removeBlacklist(${i})">解除</button>
+                        <button class="btn-sub" style="background:#78281f; padding:4px 8px; margin:0; color:#fff;" onclick="removeBlacklist(${i})">解除</button>
                     </div>
                 `).join('');
             }
@@ -480,10 +545,13 @@
             const resultCard = document.getElementById('result-card');
             const resultSummary = document.getElementById('result-summary');
             const resultList = document.getElementById('result-list');
+            const aiSuggestions = document.getElementById('ai-suggestions');
 
             resultCard.style.display = "block";
-            resultSummary.innerText = "⏳ ネットの海から最安値を一発検索中...";
+            resultSummary.innerText = "✨ ネットの海から最安値をセレクト中...";
             resultList.innerHTML = "";
+            aiSuggestions.style.display = "none";
+            aiSuggestions.innerHTML = "";
             document.getElementById('btn-reset').style.display = "none";
 
             let prompt = `You are a professional price comparison assistant for Akky.\n`;
@@ -500,11 +568,18 @@
             prompt += `3. If you find unknown shops outside the whitelist, tag them as unknown so Akky can decide.\n`;
             prompt += `4. Extract the single best/cleanest Japanese product text or model name used for your internal market search and provide it as "searched_keyword".\n`;
             prompt += `5. For each shop, generate a direct search results URL for this product on that specific store. Make sure the search query in the URL is properly URL-encoded (e.g., spaces converted to %20 or +, Japanese text encoded correctly).\n`;
+            prompt += `6. IMPORTANT SPECIAL RULE FOR BROAD KEYWORDS: If the keyword is too vague or generic (e.g., "鋳物鍋 20cm", "スニーカー 白", "フライパン 26cm") and doesn't specify a brand or exact model, you MUST provide 3 specific popular/recommended product suggestions in the "ai_suggestions" array so Akky can choose one. If the keyword is specific enough, leave the array empty.\n`;
             
             prompt += `\nOutput MUST be raw JSON format only (No markdown code blocks, just pure JSON object):\n`;
             prompt += `{\n`;
-            prompt += `  "verdict": "A brief conclusion in Japanese (e.g., 'ネットのAmazonが送料込みでも一番安いです！')",\n`;
+            prompt += `  "verdict": "A brief conclusion in Japanese.",\n`;
             prompt += `  "searched_keyword": "Geminiが特定・使用した、コピペに最適な綺麗な商品名・型番キーワード（日本語OK）",\n`;
+            prompt += `  "ai_suggestions": [\n`;
+            prompt += `    {\n`;
+            prompt += `      "name": "具体的なおすすめ商品名1 (例: ストウブ ピコ ココット ラウンド 20cm)",\n`;
+            prompt += `      "reason": "おすすめの理由や特徴をサクッと一言"\n`;
+            prompt += `    }\n`;
+            prompt += `  ],\n`;
             prompt += `  "shops": [\n`;
             prompt += `    {\n`;
             prompt += `      "name": "Shop Name",\n`;
@@ -545,14 +620,32 @@
                 rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
                 const result = JSON.parse(rawText);
 
+                // --- 🤖 ふんわりワードのときのAIおすすめ表示 ---
+                if (result.ai_suggestions && result.ai_suggestions.length > 0) {
+                    aiSuggestions.style.display = "block";
+                    aiSuggestions.innerHTML = `
+                        <div class="ai-suggestion-box">
+                            💡 <strong>Geminiのセレクト相談室</strong><br>
+                            <span style="font-size:0.8rem; color:var(--text-muted);">キーワードがふんわりしていたので、コンシェルジュ厳選の3選をご提案します。</span>
+                            ${result.ai_suggestions.map(item => `
+                                <div class="ai-item">
+                                    <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
+                                    <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin-top:4px;">✨ ${item.reason}</span>
+                                    <button class="btn-main" style="padding:10px; margin-top:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="autoSearchWithSuggestedWord('${item.name.replace(/'/g, "\\'")}')">この最安値を一発比較する ✨</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
                 const detectedWord = result.searched_keyword || textQuery || "商品最安値";
                 resultSummary.innerHTML = `
-                    📢 ズバッと結論：<br><span style="color:#fff; font-weight:normal;">${result.verdict}</span>
-                    <div style="margin-top: 12px; padding: 10px; background: #161616; border-radius: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
+                    📢 結論：<br><span style="color:#fff; font-weight:normal; font-size:0.9rem;">${result.verdict}</span>
+                    <div style="margin-top: 12px; padding: 10px; background: #1a1a1a; border-radius: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
                         <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;">
-                            📋 <span style="color:var(--text-muted);">参考ワード:</span> <strong id="target-word" style="color:var(--accent-color);">${detectedWord}</strong>
+                            📋 <span style="color:var(--text-muted);">参考ワード:</span> <strong id="target-word" style="color:var(--primary-color);">${detectedWord}</strong>
                         </div>
-                        <button onclick="copyKeyword()" style="width:auto; margin:0; padding:6px 12px; font-size:0.75rem; background:#444; border:none; border-radius:6px; color:#fff; font-weight:bold; cursor:pointer; flex-shrink:0;">コピー</button>
+                        <button onclick="copyKeyword()" style="width:auto; margin:0; padding:6px 12px; font-size:0.75rem; background:#3a3a3a; border:none; border-radius:6px; color:#fff; font-weight:bold; cursor:pointer; flex-shrink:0;">コピー</button>
                     </div>
                 `;
 
@@ -562,7 +655,7 @@
 
                         const isRegular = whitelist.includes(shop.name) || shop.is_regular;
                         const tagClass = isRegular ? 'tag-regular' : 'tag-unknown';
-                        const tagLabel = isRegular ? '📌 いつものショップ' : '⚠️ 初見・要確認';
+                        const tagLabel = isRegular ? '📌 レギュラーショップ' : '⚠️ 要確認ショップ';
                         const itemClass = isRegular ? '' : 'alert-shop';
 
                         const shopUrl = shop.direct_search_url || `https://www.google.com/search?q=${encodeURIComponent(detectedWord)}`;
@@ -571,14 +664,14 @@
                         if (!isRegular) {
                             actionButtons = `
                                 <div style="margin-top:8px; text-align:right;">
-                                    <button class="btn-sub" style="background:#2e6930; font-size:0.75rem;" onclick="addWhitelistFromServer('${shop.name}')">📌 レギュラーに追加</button>
-                                    <button class="btn-sub" style="background:#8b0000; font-size:0.75rem;" onclick="addBlacklistFromServer('${shop.name}')">❌ 今後除外する</button>
+                                    <button class="btn-sub" style="background:#2e4053; font-size:0.75rem; color:#fff;" onclick="addWhitelistFromServer('${shop.name}')">📌 追加</button>
+                                    <button class="btn-sub" style="background:#78281f; font-size:0.75rem; color:#fff;" onclick="addBlacklistFromServer('${shop.name}')">❌ 除外</button>
                                 </div>
                             `;
                         } else {
                             actionButtons = `
                                 <div style="margin-top:8px; text-align:right;">
-                                    <button class="btn-sub" style="background:#8b0000; font-size:0.75rem;" onclick="addBlacklistFromServer('${shop.name}')">❌ このショップを除外</button>
+                                    <button class="btn-sub" style="background:#78281f; font-size:0.75rem; color:#fff;" onclick="addBlacklistFromServer('${shop.name}')">❌ このショップを除外</button>
                                 </div>
                             `;
                         }
@@ -592,7 +685,7 @@
                                         <span class="shipping-text">📦 送料: ${shop.shipping}</span>
                                     </div>
                                     <div>
-                                        <a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップを開く 🔗</a>
+                                        <a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップへ 🔗</a>
                                     </div>
                                 </div>
                                 <div class="points-text">🪙 特典: ${shop.points || '情報なし'}</div>
@@ -601,10 +694,13 @@
                         `;
                     }).join('');
                 } else {
-                    resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">該当するショップ情報が見つかりませんでした。</p>`;
+                    if (result.ai_suggestions && result.ai_suggestions.length > 0) {
+                        resultList.innerHTML = '';
+                    } else {
+                        resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">該当するショップ情報が見つかりませんでした。</p>`;
+                    }
                 }
 
-                // 正常に結果が出たらリセットボタンを出現させる
                 document.getElementById('btn-reset').style.display = "block";
 
             } catch (error) {
