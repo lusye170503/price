@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ずぼら価格一発比較ツール</title>
     
-    <!-- PWA設定（ホーム画面追加用） -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ずぼら比較">
@@ -14,14 +13,14 @@
         :root {
             --primary-color: #d4af37; /* 洗練された大人のシャンパンゴールド */
             --primary-hover: #bda030;
-            --accent-color: #e67e22; /* 鋳物鍋にも映える深みのあるコッパーオレンジ */
+            --accent-color: #e67e22; /* コッパーオレンジ */
             --bg-color: #1a1a1a; /* 高級感のあるシックなダークチャコール */
-            --card-bg: #242424; /* 階層が綺麗に見えるエレガントなグレー */
-            --text-color: #f5f5f7; /* Appleライクな洗練された白 */
-            --text-muted: #9e9e9e; /* 控えめで上品なグレー */
+            --card-bg: #242424; /* グレー */
+            --text-color: #f5f5f7; /* Appleライクな白 */
+            --text-muted: #9e9e9e; /* 上品なグレー */
             --shop-safe: #34495e; /* レギュラーショップ用の落ち着いたネイビー */
             --shop-unknown: #4a3737; /* 初見用の品のあるくすみレッド */
-            --link-color: #5dade2; /* リンク用のスマートなライトブルー */
+            --link-color: #5dade2; /* リンク用のライトブルー */
             --ai-bg: #1c2833; /* AI相談室用の深みのあるディープブルー */
         }
 
@@ -116,7 +115,7 @@
 
         button.btn-main {
             background-color: var(--primary-color);
-            color: #111; /* ゴールド背景なので文字はダークにして視認性UP */
+            color: #111;
             border: none;
             font-weight: bold;
             font-size: 1.05rem;
@@ -139,9 +138,7 @@
             border-radius: 8px;
             cursor: pointer;
         }
-        button.btn-sub:active { background-color: #4a4a4a; }
 
-        /* リセットボタン用 */
         button.btn-clear {
             background-color: #282828;
             color: #bbb;
@@ -153,9 +150,7 @@
             margin-top: 10px;
             border-radius: 10px;
         }
-        button.btn-clear:active { background-color: #1e1e1e; }
 
-        /* リンクボタン用スタイル */
         .btn-link {
             background-color: #34495e !important;
             color: #fff !important;
@@ -169,9 +164,7 @@
             cursor: pointer;
             text-align: center;
         }
-        .btn-link:active { background-color: #2c3e50 !important; }
 
-        /* AIおすすめセクション */
         .ai-suggestion-box {
             background: var(--ai-bg);
             border: 1px solid #2e4053;
@@ -187,13 +180,11 @@
             border-left: 4px solid var(--primary-color);
         }
 
-        /* 結果表示のデザイン */
         .result-item {
             background: #1c1c1c;
             border-radius: 10px;
             padding: 14px;
             margin-bottom: 12px;
-            border-left: 4px solid var(--shop-safe);
             border: 1px solid #2c2c2c;
             border-left: 4px solid var(--shop-safe);
         }
@@ -208,7 +199,6 @@
             border-radius: 5px;
             font-weight: bold;
             margin-bottom: 8px;
-            letter-spacing: 0.02em;
         }
         .tag-regular { background: #2e4053; color: #ebf5fb; }
         .tag-unknown { background: #78281f; color: #ffdac1; }
@@ -229,7 +219,6 @@
             margin-top: 6px;
         }
 
-        /* 画像プレビュー */
         #img-preview {
             max-width: 100%;
             max-height: 150px;
@@ -239,7 +228,6 @@
             border: 1px solid #333;
         }
 
-        /* ナビゲーションバー */
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -260,7 +248,6 @@
             font-size: 0.75rem;
             text-decoration: none;
             cursor: pointer;
-            transition: color 0.2s ease;
         }
         .nav-item.active {
             color: var(--primary-color);
@@ -286,9 +273,7 @@
             padding: 10px 0;
             border-bottom: 1px solid #2d2d2d;
         }
-        .list-item:last-child {
-            border-bottom: none;
-        }
+        .list-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -297,16 +282,13 @@
 
     <div class="container">
         
-        <!-- 🏠 メイン比較画面 -->
         <div id="page-search" class="page active">
             
-            <!-- 🔍 検索モード選択 -->
             <div class="mode-selector">
                 <div id="m-easy" class="mode-btn active" onclick="setSearchMode('easy')">🕰️ ふんわり検索<br>(探す・迷い中用)</div>
                 <div id="m-strict" class="mode-btn" onclick="setSearchMode('strict')">🎯 型番でカッチリ<br>(最安値指名買い)</div>
             </div>
 
-            <!-- 📝 入力エリア -->
             <div class="card">
                 <h2>🛒 何をくらべる？</h2>
                 <input type="text" id="search-input" placeholder="例: Staub ココット 26cm チェリーレッド">
@@ -318,29 +300,24 @@
                 </div>
 
                 <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗の対抗価格 (あれば)</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 対抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
 
             <button class="btn-main" id="btn-submit" onclick="startComparison();">最安値を一発比較する ✨</button>
             
-            <!-- リセットボタン（最初は非表示） -->
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
-            <!-- 📊 比較結果表示 -->
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
                 
-                <!-- 🤖 AIのふんわりおすすめ提案コーナー -->
                 <div id="ai-suggestions" style="display:none;"></div>
-
                 <div id="result-summary" style="font-size: 0.95rem; line-height: 1.5; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #2d2d2d;"></div>
                 <div id="result-list"></div>
             </div>
         </div>
 
-        <!-- 🛡️ 設定・ショップ管理画面 -->
         <div id="page-settings" class="page">
             <div class="card">
                 <h2>🔑 AIの鍵設定（家計簿・英語共通）</h2>
@@ -367,14 +344,13 @@
 
     </div>
 
-    <!-- ナビバー -->
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchTab('search', this);"><span class="nav-icon">🔍</span>一発比較</div>
         <div class="nav-item" onclick="switchTab('settings', this);"><span class="nav-icon">⚙️</span>管理</div>
     </div>
 
     <script>
-        let currentMode = 'easy'; // 'easy' or 'strict'
+        let currentMode = 'easy';
         let base64Image = null;
 
         let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Liteショップ"];
@@ -437,12 +413,8 @@
         function clearAllInputs() {
             document.getElementById('search-input').value = "";
             document.getElementById('local-shop-input').value = "";
-            
             const fileInput = document.getElementById('image-file');
-            if (fileInput) {
-                fileInput.value = ""; 
-            }
-            
+            if (fileInput) fileInput.value = ""; 
             const img = document.getElementById('img-preview');
             img.src = "";
             img.style.display = "none";
@@ -454,7 +426,6 @@
             document.getElementById('result-summary').innerHTML = "";
             document.getElementById('result-list').innerHTML = "";
             document.getElementById('btn-reset').style.display = "none";
-            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -560,15 +531,20 @@
             prompt += `[BANNED Shops (Blacklist)]: ${blacklist.join(', ')} -> NEVER include these stores in the results.\n`;
             
             if(textQuery) prompt += `[Target Product/Keyword]: ${textQuery}\n`;
-            if(localPrice) prompt += `[User's Local/Chirar Price Input]: ${localPrice} (Compare this with online prices and give a clear verdict on which is cheaper)\n`;
+            if(localPrice) prompt += `[User's Local/Chirar Price Input]: ${localPrice}\n`;
             
-            prompt += `\nCRITICAL PRICE RULES:\n`;
+            prompt += `\nCRITICAL SEARCH & PRICE RULES:\n`;
             prompt += `1. NEVER use "Effective Price" (実質価格) after point subtractions. Point calculations must be separated!\n`;
             prompt += `2. You MUST separate the Base Product Price (本体価格) and Shipping Fee (送料). Display them clearly.\n`;
             prompt += `3. If you find unknown shops outside the whitelist, tag them as unknown so Akky can decide.\n`;
             prompt += `4. Extract the single best/cleanest Japanese product text or model name used for your internal market search and provide it as "searched_keyword".\n`;
-            prompt += `5. For each shop, generate a direct search results URL for this product on that specific store. Make sure the search query in the URL is properly URL-encoded (e.g., spaces converted to %20 or +, Japanese text encoded correctly).\n`;
-            prompt += `6. IMPORTANT SPECIAL RULE FOR BROAD KEYWORDS: If the keyword is too vague or generic (e.g., "鋳物鍋 20cm", "スニーカー 白", "フライパン 26cm") and doesn't specify a brand or exact model, you MUST provide 3 specific popular/recommended product suggestions in the "ai_suggestions" array so Akky can choose one. If the keyword is specific enough, leave the array empty.\n`;
+            
+            // 重要：ヨドバシカメラのURLルール、および公式サイト・セール価格のルールを追加
+            prompt += `5. URL GENERATION RULE FOR YODOBASHI: For Yodobashi Camera ("ヨドバシカメラ"), the direct_search_url MUST strictly follow this pattern: "https://www.yodobashi.com/?word=" appended with the URL-encoded 'searched_keyword'. Do NOT use any other URL format for Yodobashi.\n`;
+            prompt += `6. OFFICIAL BRAND SITES RULE: If the search keyword is broad or a specific brand is identified (e.g. Iris Ohyama, Staub, Le Creuset), you MUST try to search and include the manufacturer's official online store (e.g., "アイリスプラザ" for Iris Ohyama) in the "shops" results if they have stock or special offers, even if it is not in the whitelist.\n`;
+            prompt += `7. RECENT SALE PRICES: Try to find and reflect the most recent time-sale, Prime Sale, or super-sale dynamic pricing and campaign point back information available in your knowledge/live-search for all shops.\n`;
+            
+            prompt += `8. IMPORTANT SPECIAL RULE FOR BROAD KEYWORDS: If the keyword is too vague or generic (e.g., "セカンド冷凍庫", "鋳物鍋 20cm") and doesn't specify a brand or exact model, you MUST provide 3 specific popular/recommended product suggestions in the "ai_suggestions" array so Akky can choose one. If the keyword is specific enough, leave the array empty.\n`;
             
             prompt += `\nOutput MUST be raw JSON format only (No markdown code blocks, just pure JSON object):\n`;
             prompt += `{\n`;
@@ -576,7 +552,7 @@
             prompt += `  "searched_keyword": "Geminiが特定・使用した、コピペに最適な綺麗な商品名・型番キーワード（日本語OK）",\n`;
             prompt += `  "ai_suggestions": [\n`;
             prompt += `    {\n`;
-            prompt += `      "name": "具体的なおすすめ商品名1 (例: ストウブ ピコ ココット ラウンド 20cm)",\n`;
+            prompt += `      "name": "具体的なおすすめ商品名1",\n`;
             prompt += `      "reason": "おすすめの理由や特徴をサクッと一言"\n`;
             prompt += `    }\n`;
             prompt += `  ],\n`;
@@ -588,6 +564,10 @@
             prompt += `      "shipping": "送料情報(無料、または〇〇円)",\n`;
             prompt += `      "points": "ポイント情報(〇〇pt還元など)",\n`;
             prompt += `      "direct_search_url": "The direct URL-encoded search results page URL for this item on this store"\n`;
+            
+            // fallback用の汎用サーチURL生成ロジック
+            const detectedWordPlaceholder = textQuery || "商品最安値";
+            
             prompt += `    }\n`;
             prompt += `  ]\n`;
             prompt += `}`;
@@ -597,10 +577,7 @@
 
             if (base64Image) {
                 partsArray.push({
-                    inline_data: {
-                        mime_type: "image/jpeg",
-                        data: base64Image
-                    }
+                    inline_data: { mime_type: "image/jpeg", data: base64Image }
                 });
                 partsArray.push({ text: "Analyze this image/screenshot to identify the product model/name and include it in the price comparison." });
             }
@@ -620,13 +597,12 @@
                 rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
                 const result = JSON.parse(rawText);
 
-                // --- 🤖 ふんわりワードのときのAIおすすめ表示 ---
                 if (result.ai_suggestions && result.ai_suggestions.length > 0) {
                     aiSuggestions.style.display = "block";
                     aiSuggestions.innerHTML = `
                         <div class="ai-suggestion-box">
                             💡 <strong>Geminiのセレクト相談室</strong><br>
-                            <span style="font-size:0.8rem; color:var(--text-muted);">キーワードがふんわりしていたので、コンシェルジュ厳選の3選をご提案します。</span>
+                            <span style="font-size:0.8rem; color:var(--text-muted);">キーワードがふんわりしていたので、公式ストアやセール情報も意識して3選をご提案します。</span>
                             ${result.ai_suggestions.map(item => `
                                 <div class="ai-item">
                                     <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
@@ -655,13 +631,25 @@
 
                         const isRegular = whitelist.includes(shop.name) || shop.is_regular;
                         const tagClass = isRegular ? 'tag-regular' : 'tag-unknown';
-                        const tagLabel = isRegular ? '📌 レギュラーショップ' : '⚠️ 要確認ショップ';
+                        
+                        // 公式サイトのときはタグの文言を少しわかりやすく
+                        let tagLabel = isRegular ? '📌 レギュラーショップ' : '⚠️ 要確認ショップ';
+                        if (shop.name.includes("公式") || shop.name.includes("プラザ")) {
+                            tagLabel = '👑 ブランド公式ストア';
+                        }
+                        
                         const itemClass = isRegular ? '' : 'alert-shop';
 
-                        const shopUrl = shop.direct_search_url || `https://www.google.com/search?q=${encodeURIComponent(detectedWord)}`;
+                        // ヨドバシカメラのURL生成バグに対するフロント側での二重セーフティ
+                        let shopUrl = shop.direct_search_url;
+                        if (shop.name === "ヨドバシカメラ") {
+                            shopUrl = `https://www.yodobashi.com/?word=${encodeURIComponent(detectedWord)}`;
+                        } else if (!shopUrl) {
+                            shopUrl = `https://www.google.com/search?q=${encodeURIComponent(shop.name + " " + detectedWord)}`;
+                        }
 
                         let actionButtons = '';
-                        if (!isRegular) {
+                        if (!isRegular && !shop.name.includes("公式")) {
                             actionButtons = `
                                 <div style="margin-top:8px; text-align:right;">
                                     <button class="btn-sub" style="background:#2e4053; font-size:0.75rem; color:#fff;" onclick="addWhitelistFromServer('${shop.name}')">📌 追加</button>
@@ -688,7 +676,7 @@
                                         <a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップへ 🔗</a>
                                     </div>
                                 </div>
-                                <div class="points-text">🪙 特典: ${shop.points || '情報なし'}</div>
+                                <div class="points-text">🪙 特典・セール: ${shop.points || '情報なし'}</div>
                                 ${actionButtons}
                             </div>
                         `;
