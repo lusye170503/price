@@ -242,7 +242,7 @@
                 </div>
 
                 <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 対抗価格 (あれば)</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 对抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
@@ -303,7 +303,7 @@
         let currentMode = 'easy';
         let base64Image = null;
         let globalSuggestions = []; 
-        let initialSearchKeyword = ""; // 最初の検索ワードを隔離保存する変数
+        let initialSearchKeyword = ""; 
 
         let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Lite（アプリ内ショップ）"];
         let blacklist = JSON.parse(localStorage.getItem('akky_shop_blacklist')) || [];
@@ -408,9 +408,11 @@
             navigator.clipboard.writeText(word).then(() => alert("コピーしました！📋")).catch(() => alert("コピー失敗 😢"));
         }
 
-        // 解析をスムーズにするためのクリーニング関数
+        // Geminiのレスポンスを100%確実にJSONパースする屈強な関数
         async function callGemini(promptText, hasImage = false) {
             const apiKey = localStorage.getItem('gemini_api_key');
+            if(!apiKey) throw new Error("API_KEY_MISSING");
+
             let payloadContents = [{ role: "user", parts: [{ text: promptText }] }];
             if (hasImage && base64Image) {
                 payloadContents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
@@ -422,19 +424,29 @@
                 body: JSON.stringify({ contents: payloadContents })
             });
 
-            if(!response.ok) throw new Error("API_RESPONSE_NOT_OK");
+            if(!response.ok) {
+                const errText = await response.text();
+                throw new Error("API_ERROR_STATUS_" + response.status + ": " + errText);
+            }
+            
             const data = await response.json();
-            if(!data.candidates || data.candidates.length === 0) throw new Error("NO_CANDIDATES");
+            if(!data.candidates || data.candidates.length === 0) throw new Error("NO_CANDIDATES_RETURNED");
             
             let rawText = data.candidates[0].content.parts[0].text.trim();
             
-            // AIが変なマークダウンを付けても確実にJSONだけを抜き出す処理
+            // JSONの切り出しロジックの強化
             const firstBracket = rawText.indexOf('{');
             const lastBracket = rawText.lastIndexOf('}');
             if (firstBracket !== -1 && lastBracket !== -1) {
                 rawText = rawText.substring(firstBracket, lastBracket + 1);
             }
-            return JSON.parse(rawText);
+            
+            try {
+                return JSON.parse(rawText);
+            } catch(jsonErr) {
+                console.error("JSONパースに失敗した生のAIテキスト:", rawText);
+                throw new Error("JSON_PARSE_FAILED");
+            }
         }
 
         // 【1周目】最初のざっくり検索
@@ -447,7 +459,6 @@
                 return;
             }
 
-            // 最初の検索ワードを記憶して、入力欄を汚さないようにする
             initialSearchKeyword = textQuery;
 
             const chatSection = document.getElementById('ai-chat-section');
@@ -463,7 +474,7 @@
             sugSection.style.display = "none";
             document.getElementById('btn-reset').style.display = "block";
 
-            let prompt = `ユーザーは日本のECサイトで「${initialSearchKeyword}」に関する商品を探しています。より最適な具体的商品を3つに絞り込むために、サイズ、容量、予算、設置タイプなどの希望を聞く質問を日本語で1つ作成してください。必ず以下のJSONフォーマットのみを返してください。不要な挨拶や解説文は一切禁止します。
+            let prompt = `ユーザーは日本のECサイトで「${initialSearchKeyword}」を探しています。より最適な具体的商品を3つに絞り込むために、サイズ、容量、予算、設置タイプなどの希望を深掘りする質問を日本語で1つ作成してください。必ず以下のJSONフォーマットの通りに出力してください。余計な説明は一切含めないでください。
 {
   "ask_user_for_details": "ここにユーザーへの短い質問文"
 }`;
@@ -485,7 +496,7 @@
                 console.error(e);
                 resultCard.style.display = "none";
                 chatSection.style.display = "block";
-                document.getElementById('ai-chat-question').innerText = `「${initialSearchKeyword}」について、容量やサイズ、設置方法などの具体的なご希望を教えてくださいな 💡`;
+                document.getElementById('ai-chat-question').innerText = `「${initialSearchKeyword}」について、容量やサイズ、設置方法などの具体的なご希望を教えてくださいな 💡\n(システム状況: ${e.message})`;
             }
         }
 
@@ -502,17 +513,28 @@
             resultCard.style.display = "block";
             resultSummary.innerText = "✨ 条件に合うベストな商品を3つピックアップ中...";
 
-            // プロンプトを緩和し、AIが確実に出力できるように調整
-            let prompt = `日本の家電・商品市場に実在する具体的な商品モデル・型番を3つ提案してください。
-[探しているカテゴリ]: ${initialSearchKeyword}
-[ユーザーのこだわり条件]: ${ans}
+            // AIが絶対に迷わない最強のプロンプト形式に変更
+            let prompt = `あなたは日本の優秀なショッピングコンサルタントです。
+[探している大カテゴリ]: ${initialSearchKeyword}
+[ユーザーの細かいこだわり条件]: ${ans}
 
-必ず以下のJSONフォーマットの構造に当てはめて出力してください。
+上記を満たす、日本の市場で今リアルに購入できる具体的なメーカー名と型番（または正確な商品名）を「3つ」厳選してください。
+出力は、必ず以下のJSONのテンプレートの空欄を埋める形だけで返してください。余計な文字、マークダウンの装飾、前置きは一切排除してください。
+
 {
   "ai_suggestions": [
-    { "name": "メーカー名と正確な型番・商品名", "reason": "この商品が条件に合う理由（日本語）" },
-    { "name": "メーカー名と正確な型番・商品名", "reason": "この商品が条件に合う理由（日本語）" },
-    { "name": "メーカー名と正確な型番・商品名", "reason": "この商品が条件に合う理由（日本語）" }
+    {
+      "name": "1つ目の具体的なメーカー名と正確な型番・モデル名",
+      "reason": "この商品が選ばれた理由を日本語で短く"
+    },
+    {
+      "name": "2つ目の具体的なメーカー名と正確な型番・モデル名",
+      "reason": "この商品が選ばれた理由を日本語で短く"
+    },
+    {
+      "name": "3つ目の具体的なメーカー名と正確な型番・モデル名",
+      "reason": "この商品が選ばれた理由を日本語で短く"
+    }
   ]
 }`;
 
@@ -523,13 +545,13 @@
                 if (result && result.ai_suggestions && result.ai_suggestions.length > 0) {
                     showSuggestions(result.ai_suggestions);
                 } else {
-                    throw new Error("EMPTY_SUGGESTIONS");
+                    throw new Error("SUGGESTIONS_EMPTY");
                 }
             } catch(e) {
                 console.error(e);
                 resultCard.style.display = "none";
                 chatSection.style.display = "block";
-                alert("AIの応答が乱れました。もう一度「商品を探してもらう」を押すか、もう少し文字数を短くして条件を入力してみてください！");
+                alert(`商品の抽出がうまくできませんでした。\n原因: ${e.message}\n\nもう一度「商品を探してもらう」ボタンを押すか、条件のキーワードを少し変えてみてください！`);
             }
         }
 
@@ -576,17 +598,24 @@
             resultList.innerHTML = "";
             document.getElementById('btn-reset').style.display = "block";
 
-            let prompt = `「${productName}」の日本国内での最新の販売価格・送料・ポイント還元情報を調査してください。
-[レギュラー指定ショップ]: ${whitelist.join(', ')}
-[完全に除外するショップ]: ${blacklist.join(', ')}
-${localPrice ? `[実店舗の対抗価格]: ${localPrice}` : ''}
+            let prompt = `「${productName}」について、日本国内の主要ECサイトでのリアルな販売価格、送料、ポイント還元、セール情報をリサーチしてください。
+[お気に入りショップ]: ${whitelist.join(', ')}
+[除外ブラックリスト]: ${blacklist.join(', ')}
+${localPrice ? `[実店舗価格との対抗]: ${localPrice}` : ''}
 
-必ず以下のJSON形式のみで出力してください。
+必ず以下のJSON形式のテンプレートのみで回答してください。
 {
-  "verdict": "全体の価格比較の総評（日本語）",
+  "verdict": "全体の最安値傾向や、どこで買うのが一番お得かのまとめ（日本語）",
   "searched_keyword": "${productName}",
   "shops": [
-    { "name": "ショップ名", "is_regular": true, "base_price": "〇〇円", "shipping": "送料無料 または 〇〇円", "points": "還元情報やセール情報", "direct_search_url": "" }
+    {
+      "name": "ショップ名（例: Amazon）",
+      "is_regular": true,
+      "base_price": "〇〇円",
+      "shipping": "送料無料 または 送料〇〇円",
+      "points": "還元ポイントやセールの特典情報",
+      "direct_search_url": ""
+    }
   ]
 }`;
 
@@ -641,7 +670,7 @@ ${localPrice ? `[実店舗の対抗価格]: ${localPrice}` : ''}
             } catch(e) {
                 console.error(e);
                 resultSummary.innerText = "❌ 最安値の解析中にエラーが発生しました。";
-                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">一時的にAIとの接続が途切れた可能性があります。時間を置いてもう一度お試しください。</p>`;
+                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">一時的にAIとの接続が途切れた可能性があります。原因: ${e.message}</p>`;
             }
         }
     </script>
