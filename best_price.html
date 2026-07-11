@@ -304,7 +304,7 @@
     <script>
         let currentMode = 'easy';
         let base64Image = null;
-        let globalSuggestions = []; // 安全のためにグローバルで値を保持
+        let globalSuggestions = []; 
 
         let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Lite（アプリ内ショップ）"];
         let blacklist = JSON.parse(localStorage.getItem('akky_shop_blacklist')) || [];
@@ -378,7 +378,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 引数ではなくインデックス番号で指定することで、引用符のエラーを完全に撲滅
         function selectSuggestion(index) {
             if(globalSuggestions[index]) {
                 document.getElementById('search-input').value = globalSuggestions[index];
@@ -422,26 +421,6 @@
             renderShopLists();
         }
 
-        function addBlacklistFromServer(shopName) {
-            if(!blacklist.includes(shopName)) {
-                blacklist.push(shopName);
-                localStorage.setItem('akky_shop_blacklist', JSON.stringify(blacklist));
-                renderShopLists();
-                alert(`「${shopName}」を除外しました。`);
-                startComparison();
-            }
-        }
-
-        function addWhitelistFromServer(shopName) {
-            if(!whitelist.includes(shopName)) {
-                whitelist.push(shopName);
-                localStorage.setItem('akky_shop_whitelist', JSON.stringify(whitelist));
-                renderShopLists();
-                alert(`「${shopName}」をお気に入りに登録しました！`);
-                startComparison();
-            }
-        }
-
         function copyKeyword() {
             const word = document.getElementById('target-word').innerText;
             navigator.clipboard.writeText(word).then(() => alert("コピーしました！📋")).catch(() => alert("コピー失敗 😢"));
@@ -476,29 +455,26 @@
             if(localPrice) prompt += `[User's Local Price]: ${localPrice}\n`;
             
             prompt += `\nCRITICAL SYSTEM RULES:\n`;
-            prompt += `1. Output MUST be a valid JSON object ONLY. Start with { and end with } directly.\n`;
-            prompt += `2. If the user's keyword is very broad or generic (e.g., "冷凍庫", "サブ冷凍庫", "掃除機") and lacks size, capacity, or specific parameters, you MUST fill the "ask_user_for_details" field with a helpful question in Japanese asking about size, placement, or features, and leave the "shops" array empty. Do not perform price comparison yet.\n`;
-            prompt += `3. If the keyword contains specific numbers, brands, or model details, leave "ask_user_for_details" empty and fill "shops" and "ai_suggestions" (3 hot specific model recommendations) properly.\n`;
-            prompt += `4. YODOBASHI LINK: direct_search_url for "ヨドバシカメラ" MUST be exactly "https://www.yodobashi.com/?word=" + URL-encoded searched_keyword.\n`;
-            prompt += `5. Include official brand sites (e.g., アイリスプラザ) if applicable. Reflect recent prime/time sale prices.\n`;
+            prompt += `1. Output MUST be a valid JSON object ONLY. Start with { and end with } directly. Do not wrap in markdown.\n`;
+            prompt += `2. If the user's keyword is broad/generic (e.g., "冷凍庫", "掃除機") and lacks specific sizes/models, you MUST ask a helpful question in Japanese in "ask_user_for_details" and leave "shops" empty.\n`;
+            prompt += `3. Real prices only. Prohibit imaginary calculation values.\n`;
             
-            prompt += `\nJSON structure to follow strictly:\n`;
+            prompt += `\nJSON structure:\n`;
             prompt += `{\n`;
             prompt += `  "ask_user_for_details": "Question string if broad, otherwise \\"\\"",\n`;
-            prompt += `  "verdict": "A brief conclusion in Japanese.",\n`;
-            prompt += `  "searched_keyword": "Best refined single product name string",\n`;
+            prompt += `  "verdict": "Conclusion in Japanese.",\n`;
+            prompt += `  "searched_keyword": "Refined single product name",\n`;
             prompt += `  "ai_suggestions": [\n`;
-            prompt += `    { "name": "Specific Model Name 1", "reason": "Short reason" }\n`;
+            prompt += `    { "name": "Model Name", "reason": "Reason" }\n`;
             prompt += `  ],\n`;
             prompt += `  "shops": [\n`;
-            prompt += `    { "name": "Shop Name", "is_regular": true, "base_price": "価格", "shipping": "送料", "points": "特典・セール", "direct_search_url": "URL" }\n`;
+            prompt += `    { "name": "Shop Name", "is_regular": true, "base_price": "価格", "shipping": "送料", "points": "特典", "direct_search_url": "URL" }\n`;
             prompt += `  ]\n`;
             prompt += `}`;
 
             let payloadContents = [{ role: "user", parts: [{ text: prompt }] }];
             if (base64Image) {
                 payloadContents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
-                payloadContents[0].parts.push({ text: "Analyze image to pinpoint model." });
             }
 
             try {
@@ -508,17 +484,37 @@
                     body: JSON.stringify({ contents: payloadContents })
                 });
 
+                if(!response.ok) {
+                    throw new Error("API_RESPONSE_NOT_OK");
+                }
+
                 const data = await response.json();
+                
+                if(!data.candidates || data.candidates.length === 0) {
+                    throw new Error("NO_CANDIDATES");
+                }
+
                 let rawText = data.candidates[0].content.parts[0].text.trim();
                 
-                // 強力なJSON切り出し
                 const firstBracket = rawText.indexOf('{');
                 const lastBracket = rawText.lastIndexOf('}');
                 if (firstBracket !== -1 && lastBracket !== -1) {
                     rawText = rawText.substring(firstBracket, lastBracket + 1);
                 }
 
-                const result = JSON.parse(rawText);
+                let result;
+                try {
+                    result = JSON.parse(rawText);
+                } catch(e) {
+                    // 万が一JSONパースに失敗した場合の超・鉄壁フォールバック
+                    result = {
+                        "ask_user_for_details": "",
+                        "verdict": "AIからの応答データをうまく処理できませんでした。もう一度お試しいただくか、キーワードを具体的にしてみてください（例: 冷凍庫 小型 スリム）。",
+                        "searched_keyword": textQuery || "検索ワード",
+                        "ai_suggestions": [],
+                        "shops": []
+                    };
+                }
 
                 // 対話モード質問判定
                 if (result.ask_user_for_details && result.ask_user_for_details.trim() !== "") {
@@ -533,7 +529,7 @@
 
                 // おすすめ候補の出力処理
                 if (result.ai_suggestions && result.ai_suggestions.length > 0) {
-                    globalSuggestions = result.ai_suggestions.map(item => item.name); // 配列をグローバルに退避
+                    globalSuggestions = result.ai_suggestions.map(item => item.name);
                     aiSuggestions.style.display = "block";
                     
                     let sugHtml = `
@@ -604,8 +600,8 @@
 
             } catch (error) {
                 console.error(error);
-                resultSummary.innerText = "❌ 解析エラーが発生しました。";
-                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">もう一度「最安値を一発比較する」を押すか、ワードを少し変えてみてください。</p>`;
+                resultSummary.innerText = "❌ 通信または解析エラーが発生しました。";
+                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">原因の可能性：<br>① 設定したAPIキーが間違っているか、有効期限が切れている<br>② 一時的なアクセス集中<br><br>もう一度ボタンを押すか、キーの文字列を再度ご確認ください。</p>`;
                 document.getElementById('btn-reset').style.display = "block";
             }
         }
