@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ずぼら価格一発比較ツール</title>
     
-    <!-- PWA設定（ホーム画面追加用） -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ずぼら比較">
@@ -124,7 +123,7 @@
             border-radius: 6px;
         }
 
-        /* 🆕 リセットボタン用 */
+        /* リセットボタン用 */
         button.btn-clear {
             background-color: #333;
             color: #ccc;
@@ -251,16 +250,13 @@
 
     <div class="container">
         
-        <!-- 🏠 メイン比較画面 -->
         <div id="page-search" class="page active">
             
-            <!-- 🔍 検索モード選択 -->
             <div class="mode-selector">
                 <div id="m-easy" class="mode-btn active" onclick="setSearchMode('easy')">🐢 ふんわり商品名<br>(探す・迷い中用)</div>
                 <div id="m-strict" class="mode-btn" onclick="setSearchMode('strict')">🎯 型番でカッチリ<br>(最安値指名買い)</div>
             </div>
 
-            <!-- 📝 入力エリア -->
             <div class="card">
                 <h2>🛒 何をくらべる？</h2>
                 <input type="text" id="search-input" placeholder="例: Staub ココット 26cm チェリーレッド">
@@ -279,10 +275,8 @@
 
             <button class="btn-main" id="btn-submit" onclick="startComparison();">最安値を一発比較する 🚀</button>
             
-            <!-- 🆕 リセットボタン（最初は非表示） -->
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
-            <!-- 📊 比較結果表示 -->
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
                 <div id="result-summary" style="font-size: 1rem; font-weight: bold; color: var(--accent-color); margin-bottom: 15px; padding: 10px; background: #252525; border-radius: 6px;"></div>
@@ -290,7 +284,6 @@
             </div>
         </div>
 
-        <!-- 🛡️ 設定・ショップ管理画面 -->
         <div id="page-settings" class="page">
             <div class="card">
                 <h2>🔑 AIの鍵設定（家計簿・英語共通）</h2>
@@ -317,7 +310,6 @@
 
     </div>
 
-    <!-- ナビバー -->
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchTab('search', this);"><span class="nav-icon">🔍</span>一発比較</div>
         <div class="nav-item" onclick="switchTab('settings', this);"><span class="nav-icon">⚙️</span>ショップ管理</div>
@@ -384,16 +376,21 @@
             }
         }
 
-        // 🆕 入力をすべてまっさらにクリアする関数
+        // 🛠️ 入力をすべてまっさらにクリアする関数（エラー防止の完全版）
         function clearAllInputs() {
             document.getElementById('search-input').value = "";
             document.getElementById('local-shop-input').value = "";
-            document.getElementById('image-file').value = "";
+            
+            // 🆕 ファイル選択パーツそのものを完全に初期化
+            const fileInput = document.getElementById('image-file');
+            if (fileInput) {
+                fileInput.value = ""; 
+            }
             
             const img = document.getElementById('img-preview');
             img.src = "";
             img.style.display = "none";
-            base64Image = null;
+            base64Image = null; // 内部の画像データも完全に消去
 
             document.getElementById('result-card').style.display = "none";
             document.getElementById('result-summary').innerHTML = "";
@@ -519,7 +516,7 @@
             prompt += `      "points": "ポイント情報(〇〇pt還元など)",\n`;
             prompt += `      "direct_search_url": "The direct URL-encoded search results page URL for this item on this store"\n`;
             prompt += `    }\n`;
-            prompt += `  ]\n`;
+            279:   `  ]\n`;
             prompt += `}`;
 
             let payloadContents = [];
@@ -609,7 +606,7 @@
                     resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">該当するショップ情報が見つかりませんでした。</p>`;
                 }
 
-                // 🆕 正常に結果が出たらリセットボタンを出現させる
+                // 正常に結果が出たらリセットボタンを出現させる
                 document.getElementById('btn-reset').style.display = "block";
 
             } catch (error) {
