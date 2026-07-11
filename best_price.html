@@ -376,12 +376,10 @@
             }
         }
 
-        // 🛠️ 入力をすべてまっさらにクリアする関数（エラー防止の完全版）
         function clearAllInputs() {
             document.getElementById('search-input').value = "";
             document.getElementById('local-shop-input').value = "";
             
-            // 🆕 ファイル選択パーツそのものを完全に初期化
             const fileInput = document.getElementById('image-file');
             if (fileInput) {
                 fileInput.value = ""; 
@@ -390,7 +388,7 @@
             const img = document.getElementById('img-preview');
             img.src = "";
             img.style.display = "none";
-            base64Image = null; // 内部の画像データも完全に消去
+            base64Image = null;
 
             document.getElementById('result-card').style.display = "none";
             document.getElementById('result-summary').innerHTML = "";
@@ -516,7 +514,7 @@
             prompt += `      "points": "ポイント情報(〇〇pt還元など)",\n`;
             prompt += `      "direct_search_url": "The direct URL-encoded search results page URL for this item on this store"\n`;
             prompt += `    }\n`;
-            279:   `  ]\n`;
+            prompt += `  ]\n`;
             prompt += `}`;
 
             let payloadContents = [];
