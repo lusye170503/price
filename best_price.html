@@ -124,16 +124,16 @@
             border-radius: 6px;
         }
 
-        /* 🆕 ショップへ飛ぶためのリンクボタン用スタイル */
+        /* リンクボタン用スタイル */
         .btn-link {
             background-color: var(--link-color) !important;
             color: #fff !important;
             font-weight: bold;
             text-decoration: none;
             display: inline-block;
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 6px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             border: none;
             cursor: pointer;
         }
@@ -311,9 +311,7 @@
         let currentMode = 'easy'; // 'easy' or 'strict'
         let base64Image = null;
 
-        // 初期お気に入りショップ
         let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Liteショップ"];
-        // ブラックリスト（除外ショップ）
         let blacklist = JSON.parse(localStorage.getItem('akky_shop_blacklist')) || [];
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -371,7 +369,6 @@
         }
 
         function renderShopLists() {
-            // ブラックリストの描画
             const blContainer = document.getElementById('blacklist-container');
             if(blacklist.length === 0) {
                 blContainer.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">除外中のショップはありません。</span>`;
@@ -384,7 +381,6 @@
                 `).join('');
             }
 
-            // ホワイトリストの描画
             const wlContainer = document.getElementById('whitelist-container');
             wlContainer.innerHTML = whitelist.map(shop => `
                 <div class="list-item">
@@ -431,32 +427,6 @@
             }
         }
 
-        // 🆕 主要ショップの検索結果ページURLを自動生成する関数
-        function generateShopLink(shopName, keyword) {
-            const encodedKeyword = encodeURIComponent(keyword);
-            
-            if (shopName.includes("Amazon")) {
-                return `https://www.amazon.co.jp/s?k=${encodedKeyword}`;
-            } else if (shopName.includes("楽天")) {
-                return `https://search.rakuten.co.jp/search/mall/${encodedKeyword}/`;
-            } else if (shopName.includes("ヨドバシ")) {
-                return `https://www.yodobashi.com/?word=${encodedKeyword}`;
-            } else if (shopName.includes("AliExpress")) {
-                return `https://ja.aliexpress.com/w/wholesale-${encodedKeyword}.html`;
-            } else if (shopName.includes("Temu")) {
-                return `https://www.temu.com/jp/search_result.html?search_key=${encodedKeyword}`;
-            } else if (shopName.includes("ZOZO")) {
-                return `https://zozo.jp/search/?p_keyv=${encodedKeyword}`;
-            } else if (shopName.includes("Yahoo") || shopName.includes("ヤフー")) {
-                return `https://shopping.yahoo.co.jp/search?p=${encodedKeyword}`;
-            } else if (shopName.includes("メルカリ")) {
-                return `https://jp.mercari.com/search?keyword=${encodedKeyword}`;
-            }
-            
-            // 該当がない場合はGoogleショッピングで検索
-            return `https://www.google.com/search?q=${encodedKeyword}&tbm=shop`;
-        }
-
         async function startComparison() {
             const apiKey = localStorage.getItem('gemini_api_key');
             if(!apiKey) return alert("⚙️設定タブからAPIキーを設定してください。");
@@ -489,16 +459,20 @@
             prompt += `2. You MUST separate the Base Product Price (本体価格) and Shipping Fee (送料). Display them clearly.\n`;
             prompt += `3. If you find unknown shops outside the whitelist, tag them as unknown so Akky can decide.\n`;
             
+            // 🆕 Gemini自身に直接エンコード済みの検索結果URLを作らせる指示を追加
+            prompt += `4. For each shop, generate a direct search results URL for this product on that specific store. Make sure the search query in the URL is properly URL-encoded (e.g., spaces converted to %20 or +, Japanese text encoded correctly). For unknown stores, use a Google Shopping search URL with the query encoded.\n`;
+            
             prompt += `\nOutput MUST be raw JSON format only (No markdown code blocks, just pure JSON object):\n`;
             prompt += `{\n`;
-            prompt += `  "verdict": "A brief conclusion in Japanese (e.g., 'ネットのAmazonが送料込みでも一番安いです！ドンキで買うのは待って！')",\n`;
+            prompt += `  "verdict": "A brief conclusion in Japanese (e.g., 'ネットのAmazonが送料込みでも一番安いです！')",\n`;
             prompt += `  "shops": [\n`;
             prompt += `    {\n`;
             prompt += `      "name": "Shop Name",\n`;
             prompt += `      "is_regular": true/false,\n`;
             prompt += `      "base_price": "本体価格(数字のみ or 税込表記)",\n`;
             prompt += `      "shipping": "送料情報(無料、または〇〇円)",\n`;
-            prompt += `      "points": "ポイント情報(〇〇pt還元など、価格とは独立した情報として記述)"\n`;
+            prompt += `      "points": "ポイント情報(〇〇pt還元など)",\n`;
+            prompt += `      "direct_search_url": "The direct URL-encoded search results page URL for this item on this store (e.g., 'https://www.amazon.co.jp/s?k=Staub%2026cm' or 'https://search.rakuten.co.jp/search/mall/Staub/')"\n`;
             prompt += `    }\n`;
             prompt += `  ]\n`;
             prompt += `}`;
@@ -542,10 +516,8 @@
                         const tagLabel = isRegular ? '📌 いつものショップ' : '⚠️ 初見・要確認';
                         const itemClass = isRegular ? '' : 'alert-shop';
 
-                        // 🆕 検索キーワードを特定（入力欄が空なら結論テキストから推測）
-                        const linkKeyword = textQuery || "最安値 価格比較";
-                        // 🆕 自動生成されたショップリンクURL
-                        const shopUrl = generateShopLink(shop.name, linkKeyword);
+                        // 🆕 Geminiが作ってきた完璧なダイレクトURLを採用（無ければフォールバック）
+                        const shopUrl = shop.direct_search_url || `https://www.google.com/search?q=${encodeURIComponent(textQuery || '最安値')}`;
 
                         let actionButtons = '';
                         if (!isRegular) {
@@ -571,7 +543,6 @@
                                         <span class="price-large">${shop.base_price}</span>
                                         <span class="shipping-text">📦 送料: ${shop.shipping}</span>
                                     </div>
-                                    <!-- 🆕 ショップへ飛ぶリンクボタンを追加 -->
                                     <div>
                                         <a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップを開く 🔗</a>
                                     </div>
