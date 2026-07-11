@@ -11,21 +11,19 @@
     
     <style>
         :root {
-            --primary-color: #d4af37; /* 洗練された大人のシャンパンゴールド */
+            --primary-color: #d4af37; /* シャンパンゴールド */
             --primary-hover: #bda030;
             --accent-color: #e67e22; /* コッパーオレンジ */
-            --bg-color: #1a1a1a; /* 高級感のあるシックなダークチャコール */
-            --card-bg: #242424; /* グレー */
-            --text-color: #f5f5f7; /* Appleライクな白 */
-            --text-muted: #9e9e9e; /* 上品なグレー */
-            --shop-safe: #34495e; /* レギュラーショップ用の落ち着いたネイビー */
-            --shop-unknown: #4a3737; /* 初見用の品のあるくすみレッド */
-            --link-color: #5dade2; /* リンク用のライトブルー */
-            --ai-bg: #1c2833; /* AI相談室用の深みのあるディープブルー */
+            --bg-color: #1a1a1a; /* ダークチャコール */
+            --card-bg: #242424; 
+            --text-color: #f5f5f7; 
+            --text-muted: #9e9e9e; 
+            --shop-safe: #34495e; 
+            --ai-bg: #1c2833; /* ディープブルー */
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -65,7 +63,6 @@
             padding-left: 10px;
             margin-bottom: 14px;
             font-weight: 600;
-            letter-spacing: 0.05em;
         }
 
         .page { display: none; }
@@ -81,14 +78,12 @@
             color: #fff;
             font-size: 0.95rem;
             box-sizing: border-box;
-            transition: all 0.2s ease;
         }
-        input:focus {
+        input:focus, textarea:focus {
             border-color: var(--primary-color);
             outline: none;
         }
 
-        /* モード切り替え用 */
         .mode-selector {
             display: flex;
             gap: 8px;
@@ -104,7 +99,6 @@
             border-radius: 10px;
             cursor: pointer;
             text-align: center;
-            line-height: 1.4;
         }
         .mode-btn.active {
             background-color: #2c2c2c;
@@ -123,7 +117,6 @@
             padding: 16px;
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
             border-radius: 10px;
-            letter-spacing: 0.05em;
         }
         button.btn-main:active { background-color: var(--primary-hover); }
 
@@ -143,12 +136,10 @@
             background-color: #282828;
             color: #bbb;
             border: 1px solid #3a3a3a;
-            font-weight: normal;
-            font-size: 0.9rem;
-            cursor: pointer;
             padding: 12px;
             margin-top: 10px;
             border-radius: 10px;
+            cursor: pointer;
         }
 
         .btn-link {
@@ -161,10 +152,16 @@
             border-radius: 8px;
             font-size: 0.85rem;
             border: 1px solid #566573;
-            cursor: pointer;
             text-align: center;
         }
 
+        .ai-chat-box {
+            background: #1a252f;
+            border: 1px solid #2c3e50;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
         .ai-suggestion-box {
             background: var(--ai-bg);
             border: 1px solid #2e4053;
@@ -188,10 +185,6 @@
             border: 1px solid #2c2c2c;
             border-left: 4px solid var(--shop-safe);
         }
-        .result-item.alert-shop {
-            border-left-color: #78281f;
-            background: #211a1a;
-        }
         .shop-tag {
             display: inline-block;
             font-size: 0.75rem;
@@ -203,76 +196,25 @@
         .tag-regular { background: #2e4053; color: #ebf5fb; }
         .tag-unknown { background: #78281f; color: #ffdac1; }
 
-        .price-large {
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #fff;
-        }
-        .shipping-text {
-            font-size: 0.85rem;
-            color: #e67e22;
-            margin-left: 12px;
-        }
-        .points-text {
-            font-size: 0.85rem;
-            color: #f4d03f;
-            margin-top: 6px;
-        }
+        .price-large { font-size: 1.35rem; font-weight: 700; color: #fff; }
+        .shipping-text { font-size: 0.85rem; color: #e67e22; margin-left: 12px; }
+        .points-text { font-size: 0.85rem; color: #f4d03f; margin-top: 6px; }
 
         #img-preview {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 10px;
-            margin-top: 10px;
-            display: none;
-            border: 1px solid #333;
+            max-width: 100%; max-height: 150px; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid #333;
         }
 
         .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 65px;
-            background-color: var(--card-bg);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid #2d2d2d;
-            z-index: 9999;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
+            background-color: var(--card-bg); display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid #2d2d2d; z-index: 9999;
         }
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .nav-item.active {
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-        .nav-icon {
-            font-size: 1.25rem;
-            display: block;
-            margin-bottom: 3px;
-        }
+        .nav-item { flex: 1; text-align: center; color: var(--text-muted); font-size: 0.75rem; text-decoration: none; cursor: pointer; }
+        .nav-item.active { color: var(--primary-color); font-weight: bold; }
+        .nav-icon { display: block; font-size: 1.25rem; margin-bottom: 3px; }
 
-        .list-box {
-            background: #1a1a1a;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            border: 1px solid #2d2d2d;
-        }
-        .list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #2d2d2d;
-        }
+        .list-box { background: #1a1a1a; padding: 12px; border-radius: 10px; font-size: 0.9rem; border: 1px solid #2d2d2d; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2d2d2d; }
         .list-item:last-child { border-bottom: none; }
     </style>
 </head>
@@ -309,6 +251,13 @@
             
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
+            <div id="ai-chat-section" class="ai-chat-box" style="display:none; margin-top: 20px;">
+                <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
+                <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
+                <textarea id="ai-chat-answer" placeholder="例: 100L前後で、スリムタイプ。霜取り不要がいい！" rows="2" style="background:#111; border:1px solid #444; width:100%; color:#fff; padding:10px; border-radius:8px; box-sizing:border-box; font-family:inherit;"></textarea>
+                <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatAnswer()">この条件で再検索する 🔍</button>
+            </div>
+
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
                 
@@ -327,7 +276,6 @@
 
             <div class="card">
                 <h2>❌ 除外ショップ（ブラックリスト）</h2>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0;">ここに登録されたショップは、検索結果から完全に締め出されます。</p>
                 <div class="list-box" id="blacklist-container"></div>
                 <div style="display:flex; gap:6px; margin-top:8px;">
                     <input type="text" id="new-blacklist-shop" placeholder="ショップ名を手動追加" style="margin:0;">
@@ -337,7 +285,6 @@
 
             <div class="card">
                 <h2>📌 お気に入りショップ（レギュラー固定）</h2>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0;">いつも使う基本の安心ショップ一覧です。</p>
                 <div class="list-box" id="whitelist-container"></div>
             </div>
         </div>
@@ -352,8 +299,9 @@
     <script>
         let currentMode = 'easy';
         let base64Image = null;
+        let lastQueryForChat = ""; 
 
-        let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Liteショップ"];
+        let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Lite（アプリ内ショップ）"];
         let blacklist = JSON.parse(localStorage.getItem('akky_shop_blacklist')) || [];
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -387,13 +335,8 @@
             currentMode = mode;
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('m-' + mode).classList.add('active');
-            
             const inputEl = document.getElementById('search-input');
-            if(mode === 'strict') {
-                inputEl.placeholder = "例: Staub 40509-307 (型番やJANコード)";
-            } else {
-                inputEl.placeholder = "例: Staub ココット 26cm チェリーレッド";
-            }
+            inputEl.placeholder = mode === 'strict' ? "例: Staub 40509-307 (型番やJANコード)" : "例: Staub ココット 26cm チェリーレッド";
         }
 
         function previewImage(input) {
@@ -413,13 +356,13 @@
         function clearAllInputs() {
             document.getElementById('search-input').value = "";
             document.getElementById('local-shop-input').value = "";
+            document.getElementById('ai-chat-answer').value = "";
             const fileInput = document.getElementById('image-file');
             if (fileInput) fileInput.value = ""; 
-            const img = document.getElementById('img-preview');
-            img.src = "";
-            img.style.display = "none";
+            document.getElementById('img-preview').style.display = "none";
             base64Image = null;
 
+            document.getElementById('ai-chat-section').style.display = "none";
             document.getElementById('result-card').style.display = "none";
             document.getElementById('ai-suggestions').style.display = "none";
             document.getElementById('ai-suggestions').innerHTML = "";
@@ -431,29 +374,28 @@
 
         function autoSearchWithSuggestedWord(word) {
             document.getElementById('search-input').value = word;
+            document.getElementById('ai-chat-section').style.display = "none"; 
+            startComparison();
+        }
+
+        function submitChatAnswer() {
+            const ans = document.getElementById('ai-chat-answer').value.trim();
+            if(!ans) return alert("条件を入力してくださいな 💡");
+            
+            // 元のワードにユーザーのこだわり条件をガッチャンコして再検索
+            const orig = document.getElementById('search-input').value;
+            document.getElementById('search-input').value = `${orig} ${ans}`;
+            document.getElementById('ai-chat-section').style.display = "none";
             startComparison();
         }
 
         function renderShopLists() {
             const blContainer = document.getElementById('blacklist-container');
-            if(blacklist.length === 0) {
-                blContainer.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">除外中のショップはありません。</span>`;
-            } else {
-                blContainer.innerHTML = blacklist.map((shop, i) => `
-                    <div class="list-item">
-                        <span>❌ ${shop}</span>
-                        <button class="btn-sub" style="background:#78281f; padding:4px 8px; margin:0; color:#fff;" onclick="removeBlacklist(${i})">解除</button>
-                    </div>
-                `).join('');
-            }
+            blContainer.innerHTML = blacklist.length === 0 ? `<span style="color:var(--text-muted); font-size:0.8rem;">除外中のショップはありません。</span>` : 
+                blacklist.map((shop, i) => `<div class="list-item"><span>❌ ${shop}</span><button class="btn-sub" style="background:#78281f; padding:4px 8px; margin:0; color:#fff;" onclick="removeBlacklist(${i})">解除</button></div>`).join('');
 
             const wlContainer = document.getElementById('whitelist-container');
-            wlContainer.innerHTML = whitelist.map(shop => `
-                <div class="list-item">
-                    <span>📌 ${shop}</span>
-                    <span style="font-size:0.75rem; color:var(--text-muted);">レギュラー</span>
-                </div>
-            `).join('');
+            wlContainer.innerHTML = whitelist.map(shop => `<div class="list-item"><span>📌 ${shop}</span><span style="font-size:0.75rem; color:var(--text-muted);">レギュラー</span></div>`).join('');
         }
 
         function addBlacklistHandy() {
@@ -478,7 +420,7 @@
                 blacklist.push(shopName);
                 localStorage.setItem('akky_shop_blacklist', JSON.stringify(blacklist));
                 renderShopLists();
-                alert(`「${shopName}」を今後の検索結果から除外しました。`);
+                alert(`「${shopName}」を除外しました。`);
                 startComparison();
             }
         }
@@ -488,18 +430,14 @@
                 whitelist.push(shopName);
                 localStorage.setItem('akky_shop_whitelist', JSON.stringify(whitelist));
                 renderShopLists();
-                alert(`「${shopName}」をお気に入りのレギュラーショップに登録しました！`);
+                alert(`「${shopName}」をお気に入りに登録しました！`);
                 startComparison();
             }
         }
 
         function copyKeyword() {
             const word = document.getElementById('target-word').innerText;
-            navigator.clipboard.writeText(word).then(() => {
-                alert("検索ワードをコピーしました！ショップで貼り付けてね 📋");
-            }).catch(err => {
-                alert("コピーに失敗しました、手動で選択してください 😢");
-            });
+            navigator.clipboard.writeText(word).then(() => alert("コピーしました！📋")).catch(() => alert("コピー失敗 😢"));
         }
 
         async function startComparison() {
@@ -509,14 +447,13 @@
             const textQuery = document.getElementById('search-input').value.trim();
             const localPrice = document.getElementById('local-shop-input').value.trim();
 
-            if(!textQuery && !base64Image) {
-                return alert("商品名を入力するか、画像をアップロードしてください！");
-            }
+            if(!textQuery && !base64Image) return alert("商品名を入力するか、画像をアップロードしてください！");
 
             const resultCard = document.getElementById('result-card');
             const resultSummary = document.getElementById('result-summary');
             const resultList = document.getElementById('result-list');
             const aiSuggestions = document.getElementById('ai-suggestions');
+            const chatSection = document.getElementById('ai-chat-section');
 
             resultCard.style.display = "block";
             resultSummary.innerText = "✨ ネットの海から最安値をセレクト中...";
@@ -526,52 +463,36 @@
             document.getElementById('btn-reset').style.display = "none";
 
             let prompt = `You are a professional price comparison assistant for Akky.\n`;
-            prompt += `[Search Mode]: ${currentMode === 'easy' ? 'Casual search' : 'Strict comparison'}\n`;
-            prompt += `[User's Safe Regular Shops (Whitelist)]: ${whitelist.join(', ')}\n`;
-            prompt += `[BANNED Shops (Blacklist)]: ${blacklist.join(', ')} -> NEVER include these stores.\n`;
-            
+            prompt += `[User's Regular Shops]: ${whitelist.join(', ')}\n`;
+            prompt += `[BANNED Shops]: ${blacklist.join(', ')} -> NEVER include these.\n`;
             if(textQuery) prompt += `[Target Product/Keyword]: ${textQuery}\n`;
-            if(localPrice) prompt += `[User's Local Price Input]: ${localPrice}\n`;
+            if(localPrice) prompt += `[User's Local Price]: ${localPrice}\n`;
             
-            prompt += `\nCRITICAL SEARCH & PRICE RULES:\n`;
-            prompt += `1. NEVER use "Effective Price" (実質価格) after point subtractions.\n`;
-            prompt += `2. Separate Base Product Price (本体価格) and Shipping Fee (送料) clearly.\n`;
-            prompt += `3. Extract the single best Japanese product text or model name as "searched_keyword".\n`;
-            prompt += `4. URL GENERATION RULE: For Yodobashi Camera ("ヨドバシカメラ"), direct_search_url MUST strictly be "https://www.yodobashi.com/?word=" appended with the URL-encoded searched_keyword.\n`;
-            prompt += `5. OFFICIAL BRAND SITES RULE: If a specific brand is identified (e.g. Iris Ohyama), you MUST try to find and include the manufacturer's official online store (e.g., "アイリスプラザ" or official site) in the "shops" results.\n`;
-            prompt += `6. RECENT SALE PRICES: Try to look for recent time-sale, Prime Sale, dynamic sale event prices or dynamic points back information.\n`;
-            prompt += `7. BROAD KEYWORDS: If the keyword is broad (e.g., "セカンド冷凍庫"), provide 3 specific popular product suggestions in the "ai_suggestions" array.\n`;
+            prompt += `\nCRITICAL SYSTEM RULES:\n`;
+            prompt += `1. Output MUST be a valid JSON object ONLY. NEVER wrap it in markdown code blocks like \`\`\`json ... \`\`\`. Start with { and end with } directly.\n`;
+            prompt += `2. If the user's keyword is very broad or generic (e.g., "冷凍庫", "サブ冷凍庫", "掃除機") and lacks size, capacity, or specific needs, you MUST fill the "ask_user_for_details" field with a helpful question in Japanese asking about size, placement, or features, and leave the "shops" array empty. Do not perform price comparison yet.\n`;
+            prompt += `3. If the keyword is specific enough, leave "ask_user_for_details" empty and fill "shops" and "ai_suggestions" (3 hot specific model recommendations) properly.\n`;
+            prompt += `4. YODOBASHI LINK: direct_search_url for "ヨドバシカメラ" MUST be exactly "https://www.yodobashi.com/?word=" + URL-encoded searched_keyword.\n`;
+            prompt += `5. Include official brand sites (e.g., アイリスプラザ) if applicable. Reflect recent prime/time sale prices.\n`;
             
-            prompt += `\nOutput MUST be raw JSON format only. Do NOT wrap in markdown blocks, just pure JSON object:\n`;
+            prompt += `\nJSON structure to follow strictly:\n`;
             prompt += `{\n`;
+            prompt += `  "ask_user_for_details": "If keyword is too broad, write a question here. Otherwise, leave empty \\"\\".",\n`;
             prompt += `  "verdict": "A brief conclusion in Japanese.",\n`;
-            prompt += `  "searched_keyword": "綺麗な商品名・型番キーワード",\n`;
+            prompt += `  "searched_keyword": "Best refined single product name string for clipboard copy",\n`;
             prompt += `  "ai_suggestions": [\n`;
-            prompt += `    { "name": "おすすめ商品名1", "reason": "サクッと一言" }\n`;
+            prompt += `    { "name": "Specific Model Name 1", "reason": "Short reason" }\n`;
             prompt += `  ],\n`;
             prompt += `  "shops": [\n`;
-            prompt += `    {\n`;
-            prompt += `      "name": "Shop Name",\n`;
-            prompt += `      "is_regular": true,\n`;
-            prompt += `      "base_price": "本体価格",\n`;
-            prompt += `      "shipping": "送料情報",\n`;
-            prompt += `      "points": "ポイント情報・セール情報",\n`;
-            prompt += `      "direct_search_url": "URL-encoded search page URL"\n`;
-            prompt += `    }\n`;
+            prompt += `    { "name": "Shop Name", "is_regular": true, "base_price": "価格", "shipping": "送料", "points": "特典・セール", "direct_search_url": "URL" }\n`;
             prompt += `  ]\n`;
             prompt += `}`;
 
-            let payloadContents = [];
-            let partsArray = [{ text: prompt }];
-
+            let payloadContents = [{ role: "user", parts: [{ text: prompt }] }];
             if (base64Image) {
-                partsArray.push({
-                    inline_data: { mime_type: "image/jpeg", data: base64Image }
-                });
-                partsArray.push({ text: "Analyze this image/screenshot to identify the product." });
+                payloadContents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
+                payloadContents[0].parts.push({ text: "Analyze image to pinpoint model." });
             }
-
-            payloadContents.push({ role: "user", parts: partsArray });
 
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -581,17 +502,33 @@
                 });
 
                 const data = await response.json();
-                let rawText = data.candidates[0].content.parts[0].text;
+                let rawText = data.candidates[0].content.parts[0].text.trim();
                 
-                rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+                // 強力なマークダウン剥ぎ取りクリーナー（バグ絶対防止用）
+                if (rawText.startsWith("```")) {
+                    rawText = rawText.replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
+                }
+
                 const result = JSON.parse(rawText);
+
+                // もしワードがざっくりしていて、AIから質問が返ってきた場合（対話モード起動）
+                if (result.ask_user_for_details && result.ask_user_for_details.trim() !== "") {
+                    resultCard.style.display = "none"; 
+                    chatSection.style.display = "block";
+                    document.getElementById('ai-chat-question').innerText = result.ask_user_for_details;
+                    document.getElementById('btn-reset').style.display = "block";
+                    return;
+                }
+
+                // 通常の価格比較表示処理
+                chatSection.style.display = "none";
 
                 if (result.ai_suggestions && result.ai_suggestions.length > 0) {
                     aiSuggestions.style.display = "block";
                     aiSuggestions.innerHTML = `
                         <div class="ai-suggestion-box">
-                            💡 <strong>Geminiのセレクト相談室</strong><br>
-                            <span style="font-size:0.8rem; color:var(--text-muted);">キーワードがふんわりしていたので、公式ストアやセール情報も意識して3選をご提案します。</span>
+                            💡 <strong>Geminiのおすすめ3選</strong><br>
+                            <span style="font-size:0.8rem; color:var(--text-muted);">ここから選ぶと一発でピンポイント最安値が出ます！</span>
                             ${result.ai_suggestions.map(item => `
                                 <div class="ai-item">
                                     <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
@@ -617,16 +554,10 @@
                 if(result.shops && result.shops.length > 0) {
                     resultList.innerHTML = result.shops.map(shop => {
                         if(blacklist.includes(shop.name)) return '';
-
                         const isRegular = whitelist.includes(shop.name) || shop.is_regular;
                         const tagClass = isRegular ? 'tag-regular' : 'tag-unknown';
-                        
-                        let tagLabel = isRegular ? '📌 レギュラーショップ' : '⚠️ 要確認ショップ';
-                        if (shop.name.includes("公式") || shop.name.includes("プラザ")) {
-                            tagLabel = '👑 ブランド公式ストア';
-                        }
-                        
-                        const itemClass = isRegular ? '' : 'alert-shop';
+                        let tagLabel = isRegular ? '📌 レギュラー' : '⚠️ 要確認';
+                        if (shop.name.includes("公式") || shop.name.includes("プラザ")) tagLabel = '👑 ブランド公式';
 
                         let shopUrl = shop.direct_search_url;
                         if (shop.name === "ヨドバシカメラ") {
@@ -635,52 +566,31 @@
                             shopUrl = `https://www.google.com/search?q=${encodeURIComponent(shop.name + " " + detectedWord)}`;
                         }
 
-                        let actionButtons = '';
-                        if (!isRegular && !shop.name.includes("公式")) {
-                            actionButtons = `
-                                <div style="margin-top:8px; text-align:right;">
-                                    <button class="btn-sub" style="background:#2e4053; font-size:0.75rem; color:#fff;" onclick="addWhitelistFromServer('${shop.name}')">📌 追加</button>
-                                    <button class="btn-sub" style="background:#78281f; font-size:0.75rem; color:#fff;" onclick="addBlacklistFromServer('${shop.name}')">❌ 除外</button>
-                                </div>
-                            `;
-                        } else {
-                            actionButtons = `
-                                <div style="margin-top:8px; text-align:right;">
-                                    <button class="btn-sub" style="background:#78281f; font-size:0.75rem; color:#fff;" onclick="addBlacklistFromServer('${shop.name}')">❌ このショップを除外</button>
-                                </div>
-                            `;
-                        }
-
                         return `
-                            <div class="result-item ${itemClass}">
+                            <div class="result-item">
                                 <span class="shop-tag ${tagClass}">${tagLabel} : ${shop.name}</span>
                                 <div style="display:flex; justify-content:space-between; align-items:center;">
                                     <div>
                                         <span class="price-large">${shop.base_price}</span>
-                                        <span class="shipping-text">📦 送料: ${shop.shipping}</span>
+                                        <span class="shipping-text">📦 ${shop.shipping}</span>
                                     </div>
-                                    <div>
-                                        <a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップへ 🔗</a>
-                                    </div>
+                                    <div><a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップへ 🔗</a></div>
                                 </div>
-                                <div class="points-text">🪙 特典・セール: ${shop.points || '情報なし'}</div>
-                                ${actionButtons}
+                                <div class="points-text">🪙 セール/特典: ${shop.points || '情報なし'}</div>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    if (result.ai_suggestions && result.ai_suggestions.length > 0) {
-                        resultList.innerHTML = '';
-                    } else {
-                        resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">該当するショップ情報が見つかりませんでした。</p>`;
+                    if (!result.ai_suggestions || result.ai_suggestions.length === 0) {
+                        resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">ショップ情報が見つかりませんでした。</p>`;
                     }
                 }
-
                 document.getElementById('btn-reset').style.display = "block";
 
             } catch (error) {
-                resultSummary.innerText = "❌ 比較エラーが発生しました。";
-                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">APIキーが正しいか、または入力内容を少し変えてもう一度お試しください。</p>`;
+                console.error(error);
+                resultSummary.innerText = "❌ 解析エラーが発生しました。";
+                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">もう一度「最安値を一発比較する」を押すか、ワードを少し変えてみてください。</p>`;
                 document.getElementById('btn-reset').style.display = "block";
             }
         }
