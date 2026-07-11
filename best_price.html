@@ -244,12 +244,12 @@
                 </div>
 
                 <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 対抗価格 (あれば)</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 对抗価格 (あれば)</span>
                     <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
                 </div>
             </div>
 
-            <button class="btn-main" id="btn-submit" onclick="startComparison();">最安値を一発比較する ✨</button>
+            <button class="btn-main" id="btn-submit" onclick="startInitialSearch();">最安値を一発比較する ✨</button>
             
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
@@ -258,14 +258,18 @@
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
                 <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
                 <textarea id="ai-chat-answer" placeholder="例: 100L前後で、スリムタイプ。霜取り不要がいい！" rows="2" style="background:#111; border:1px solid #444; width:100%; color:#fff; padding:10px; border-radius:8px; box-sizing:border-box; font-family:inherit;"></textarea>
-                <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatAnswer()">この条件を伝えて進める 🔍</button>
+                <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatDetailAnswer()">この条件で商品を探してもらう 🔍</button>
             </div>
 
-            <!-- 📊 比較結果表示 -->
+            <!-- 📊 おすすめ商品提案セクション -->
+            <div id="ai-suggestions-section" class="ai-suggestion-box" style="display:none; margin-top: 20px;">
+                <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💡 Geminiのおすすめ商品</div>
+                <div id="ai-suggestions-list"></div>
+            </div>
+
+            <!-- 📊 比較結果表示（最終段階） -->
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
-                
-                <div id="ai-suggestions" style="display:none;"></div>
                 <div id="result-summary" style="font-size: 0.95rem; line-height: 1.5; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #2d2d2d;"></div>
                 <div id="result-list"></div>
             </div>
@@ -274,7 +278,7 @@
         <!-- 🛡️ 設定・ショップ管理画面 -->
         <div id="page-settings" class="page">
             <div class="card">
-                <h2>🔑 AIの鍵設定（家計簿・英語共通）</h2>
+                <h2>🔑 AI的鍵設定（家計簿・英語共通）</h2>
                 <input type="password" id="app-api-key" placeholder="AQ.Ab8... で始まるキーを貼り付け" onchange="saveKey();">
                 <p style="font-size:0.75rem; color:#4e8d7c; margin: 5px 0 0 0; display:none;" id="key-status-msg">✅ 鍵を記憶しました！</p>
             </div>
@@ -369,42 +373,12 @@
             globalSuggestions = [];
 
             document.getElementById('ai-chat-section').style.display = "none";
+            document.getElementById('ai-suggestions-section').style.display = "none";
             document.getElementById('result-card').style.display = "none";
-            document.getElementById('ai-suggestions').style.display = "none";
-            document.getElementById('ai-suggestions').innerHTML = "";
             document.getElementById('result-summary').innerHTML = "";
             document.getElementById('result-list').innerHTML = "";
             document.getElementById('btn-reset').style.display = "none";
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function selectSuggestion(index) {
-            if(globalSuggestions[index]) {
-                document.getElementById('search-input').value = globalSuggestions[index];
-                document.getElementById('ai-chat-section').style.display = "none"; 
-                // 提案選択時は画像を引き継がないようクリア
-                base64Image = null;
-                const fileInput = document.getElementById('image-file');
-                if (fileInput) fileInput.value = "";
-                document.getElementById('img-preview').style.display = "none";
-                startComparison();
-            }
-        }
-
-        function submitChatAnswer() {
-            const ans = document.getElementById('ai-chat-answer').value.trim();
-            if(!ans) return alert("条件を入力してくださいな 💡");
-            const orig = document.getElementById('search-input').value;
-            document.getElementById('search-input').value = `${orig} ${ans}`;
-            document.getElementById('ai-chat-section').style.display = "none";
-            
-            // 【最重要修正】対話2周目は画像引き継ぎエラーを防ぐため画像を完全クリア
-            base64Image = null;
-            const fileInput = document.getElementById('image-file');
-            if (fileInput) fileInput.value = "";
-            document.getElementById('img-preview').style.display = "none";
-            
-            startComparison();
         }
 
         function renderShopLists() {
@@ -438,136 +412,196 @@
             navigator.clipboard.writeText(word).then(() => alert("コピーしました！📋")).catch(() => alert("コピー失敗 😢"));
         }
 
-        async function startComparison() {
+        // 通用APIコール関数
+        async function callGemini(promptText, hasImage = false) {
             const apiKey = localStorage.getItem('gemini_api_key');
-            if(!apiKey) return alert("⚙️設定タブからAPIキーを設定してください。");
-
-            const textQuery = document.getElementById('search-input').value.trim();
-            const localPrice = document.getElementById('local-shop-input').value.trim();
-
-            if(!textQuery && !base64Image) return alert("商品名を入力するか、画像をアップロードしてください！");
-
-            const resultCard = document.getElementById('result-card');
-            const resultSummary = document.getElementById('result-summary');
-            const resultList = document.getElementById('result-list');
-            const aiSuggestions = document.getElementById('ai-suggestions');
-            const chatSection = document.getElementById('ai-chat-section');
-
-            resultCard.style.display = "block";
-            resultSummary.innerText = "✨ ネットの海から最安値をセレクト中...";
-            resultList.innerHTML = "";
-            aiSuggestions.style.display = "none";
-            aiSuggestions.innerHTML = "";
-            document.getElementById('btn-reset').style.display = "none";
-
-            let prompt = `You are a professional price comparison assistant for Akky.\n`;
-            prompt += `[User's Regular Shops]: ${whitelist.join(', ')}\n`;
-            prompt += `[BANNED Shops]: ${blacklist.join(', ')} -> NEVER include these.\n`;
-            if(textQuery) prompt += `[Target Product/Keyword]: ${textQuery}\n`;
-            if(localPrice) prompt += `[User's Local Price]: ${localPrice}\n`;
-            
-            prompt += `\nCRITICAL SYSTEM RULES:\n`;
-            prompt += `1. Output MUST be a valid JSON object ONLY. Start with { and end with } directly. Do not wrap in markdown.\n`;
-            prompt += `2. If the user's keyword is broad/generic (e.g., "冷凍庫", "掃除機") and lacks specific sizes/models, you MUST ask a helpful question in Japanese in "ask_user_for_details" and leave "shops" empty.\n`;
-            prompt += `3. Real prices only. Prohibit imaginary calculation values.\n`;
-            
-            prompt += `\nJSON structure:\n`;
-            prompt += `{\n`;
-            prompt += `  "ask_user_for_details": "Question string if broad, otherwise \\"\\"",\n`;
-            prompt += `  "verdict": "Conclusion in Japanese.",\n`;
-            prompt += `  "searched_keyword": "Refined single product name",\n`;
-            prompt += `  "ai_suggestions": [\n`;
-            prompt += `    { "name": "Model Name", "reason": "Reason" }\n`;
-            prompt += `  ],\n`;
-            prompt += `  "shops": [\n`;
-            prompt += `    { "name": "Shop Name", "is_regular": true, "base_price": "価格", "shipping": "送料", "points": "特典", "direct_search_url": "URL" }\n`;
-            prompt += `  ]\n`;
-            prompt += `}`;
-
-            let payloadContents = [{ role: "user", parts: [{ text: prompt }] }];
-            if (base64Image) {
+            let payloadContents = [{ role: "user", parts: [{ text: promptText }] }];
+            if (hasImage && base64Image) {
                 payloadContents[0].parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
             }
 
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: payloadContents })
+            });
+
+            if(!response.ok) throw new Error("API_RESPONSE_NOT_OK");
+            const data = await response.json();
+            if(!data.candidates || data.candidates.length === 0) throw new Error("NO_CANDIDATES");
+            
+            let rawText = data.candidates[0].content.parts[0].text.trim();
+            const firstBracket = rawText.indexOf('{');
+            const lastBracket = rawText.lastIndexOf('}');
+            if (firstBracket !== -1 && lastBracket !== -1) {
+                rawText = rawText.substring(firstBracket, lastBracket + 1);
+            }
+            return JSON.parse(rawText);
+        }
+
+        // 【1周目】最初の検索（カッチリモードなら即比較、ふんわりなら質問か提案へ）
+        async function startInitialSearch() {
+            const textQuery = document.getElementById('search-input').value.trim();
+            if(!textQuery && !base64Image) return alert("商品名を入力するか、画像をアップロードしてください！");
+
+            // カッチリ型番モードの場合は直接価格比較へ
+            if (currentMode === 'strict') {
+                startPriceComparison(textQuery);
+                return;
+            }
+
+            // ふんわり検索モードの場合の処理
+            const chatSection = document.getElementById('ai-chat-section');
+            const sugSection = document.getElementById('ai-suggestions-section');
+            const resultCard = document.getElementById('result-card');
+            const resultSummary = document.getElementById('result-summary');
+
+            resultCard.style.display = "block";
+            resultSummary.innerText = "✨ 商品の特性を分析中...";
+            chatSection.style.display = "none";
+            sugSection.style.display = "none";
+            document.getElementById('btn-reset').style.display = "block";
+
+            let prompt = `You are an shopping advisor for Akky.\n`;
+            prompt += `[User Keyword]: ${textQuery}\n`;
+            prompt += `CRITICAL RULES:\n`;
+            prompt += `1. If the keyword is broad (e.g. "冷凍庫", "洗濯機"), you MUST ask what features they need in "ask_user_for_details". Leave "ai_suggestions" empty.\n`;
+            prompt += `2. If the keyword has enough info, skip the question and provide 3 specific product recommendation models with names and reasons in "ai_suggestions".\n`;
+            prompt += `3. Output MUST be valid JSON only.\n`;
+            prompt += `JSON format:\n{\n  "ask_user_for_details": "Question in Japanese or empty",\n  "ai_suggestions": [{ "name": "Exact Model Name/Brand", "reason": "Reason in Japanese" }]\n}`;
+
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: payloadContents })
-                });
+                const result = await callGemini(prompt, true);
+                resultCard.style.display = "none";
 
-                if(!response.ok) {
-                    throw new Error("API_RESPONSE_NOT_OK");
-                }
-
-                const data = await response.json();
-                
-                if(!data.candidates || data.candidates.length === 0) {
-                    throw new Error("NO_CANDIDATES");
-                }
-
-                let rawText = data.candidates[0].content.parts[0].text.trim();
-                
-                const firstBracket = rawText.indexOf('{');
-                const lastBracket = rawText.lastIndexOf('}');
-                if (firstBracket !== -1 && lastBracket !== -1) {
-                    rawText = rawText.substring(firstBracket, lastBracket + 1);
-                }
-
-                let result;
-                try {
-                    result = JSON.parse(rawText);
-                } catch(e) {
-                    result = {
-                        "ask_user_for_details": "",
-                        "verdict": "AIからの応答データをうまく処理できませんでした。もう一度お試しいただくか、キーワードを具体的にしてみてください（例: 冷凍庫 小型 スリム）。",
-                        "searched_keyword": textQuery || "検索ワード",
-                        "ai_suggestions": [],
-                        "shops": []
-                    };
-                }
-
-                // 対話モード質問判定
                 if (result.ask_user_for_details && result.ask_user_for_details.trim() !== "") {
-                    resultCard.style.display = "none"; 
                     chatSection.style.display = "block";
                     document.getElementById('ai-chat-question').innerText = result.ask_user_for_details;
-                    document.getElementById('btn-reset').style.display = "block";
-                    return;
+                } else if (result.ai_suggestions && result.ai_suggestions.length > 0) {
+                    showSuggestions(result.ai_suggestions);
+                } else {
+                    alert("AIがうまく解釈できませんでした。キーワードを変えてみてください。");
                 }
+            } catch(e) {
+                console.error(e);
+                resultCard.style.display = "block";
+                resultSummary.innerText = "❌ 解析エラーが発生しました。もう一度お試しください。";
+            }
+        }
 
-                chatSection.style.display = "none";
+        // 【2周目】質問に対してユーザーが詳細を返信した時
+        async function submitChatDetailAnswer() {
+            const ans = document.getElementById('ai-chat-answer').value.trim();
+            if(!ans) return alert("条件を入力してくださいな 💡");
 
-                // おすすめ候補の出力処理
+            const textQuery = document.getElementById('search-input').value.trim();
+            const chatSection = document.getElementById('ai-chat-section');
+            const resultCard = document.getElementById('result-card');
+            const resultSummary = document.getElementById('result-summary');
+
+            chatSection.style.display = "none";
+            resultCard.style.display = "block";
+            resultSummary.innerText = "✨ 条件に合うベストな商品をピックアップ中...";
+
+            let prompt = `You are a professional product selector for Akky.\n`;
+            prompt += `[Base Category]: ${textQuery}\n`;
+            prompt += `[User's Preferences]: ${ans}\n`;
+            prompt += `Based on these specific requirements, propose exactly 3 real product models available in Japan.\n`;
+            prompt += `Output MUST be valid JSON only.\n`;
+            prompt += `JSON format:\n{\n  "ai_suggestions": [\n    { "name": "Exact Brand and Model Name (e.g., シャープ SJ-D15G)", "reason": "Why this matches their request" }\n  ]\n}`;
+
+            try {
+                // 返信時は画像を引き継がない(エラー回避)
+                const result = await callGemini(prompt, false);
+                resultCard.style.display = "none";
+
                 if (result.ai_suggestions && result.ai_suggestions.length > 0) {
-                    globalSuggestions = result.ai_suggestions.map(item => item.name);
-                    aiSuggestions.style.display = "block";
-                    
-                    let sugHtml = `
-                        <div class="ai-suggestion-box">
-                            💡 <strong>Geminiのおすすめ3選</strong><br>
-                            <span style="font-size:0.8rem; color:var(--text-muted);">候補を選ぶと一発でピンポイント最安値が出ます！</span>
-                    `;
-                    
-                    for(let i=0; i < result.ai_suggestions.length; i++) {
-                        sugHtml += `
-                            <div class="ai-item">
-                                <strong style="color:var(--accent-color); font-size:0.95rem;">${result.ai_suggestions[i].name}</strong><br>
-                                <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin-top:4px;">✨ ${result.ai_suggestions[i].reason}</span>
-                                <button class="btn-main" style="padding:10px; margin-top:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectSuggestion(${i})">この最安値を一発比較する ✨</button>
-                            </div>
-                        `;
-                    }
-                    sugHtml += `</div>`;
-                    aiSuggestions.innerHTML = sugHtml;
+                    showSuggestions(result.ai_suggestions);
+                } else {
+                    chatSection.style.display = "block";
+                    alert("候補が見つかりませんでした。条件を少し緩めてみてください。");
                 }
+            } catch(e) {
+                console.error(e);
+                resultCard.style.display = "block";
+                resultSummary.innerText = "❌ 提案の作成中にエラーが発生しました。";
+            }
+        }
 
-                const detectedWord = result.searched_keyword || textQuery || "商品最安値";
+        // おすすめ商品のボタンを表示する
+        function showSuggestions(suggestions) {
+            const sugSection = document.getElementById('ai-suggestions-section');
+            const sugList = document.getElementById('ai-suggestions-list');
+            sugSection.style.display = "block";
+            
+            globalSuggestions = suggestions.map(s => s.name);
+            
+            sugList.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">ご希望にぴったりの商品が見つかりました！気になる商品をタップすると最安値を比較します：</p>`;
+            
+            suggestions.forEach((item, index) => {
+                sugList.innerHTML += `
+                    <div class="ai-item">
+                        <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
+                        <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin: 4px 0 10px 0;">✨ ${item.reason}</span>
+                        <button class="btn-main" style="padding:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectFinalProduct(${index})">この商品の最安値を一発比較する ✨</button>
+                    </div>
+                `;
+            });
+            window.scrollTo({ top: sugSection.offsetTop - 20, behavior: 'smooth' });
+        }
+
+        // 【3周目】選んだおすすめ商品をタップした時、初めて最終的な価格比較へ
+        function selectFinalProduct(index) {
+            const targetProductName = globalSuggestions[index];
+            if(targetProductName) {
+                // 選択した具体的な商品名を検索窓にセットして比較開始
+                document.getElementById('search-input').value = targetProductName;
+                document.getElementById('ai-suggestions-section').style.display = "none";
+                startPriceComparison(targetProductName);
+            }
+        }
+
+        // 【最終段階】完全に特定された商品の価格比較を実行する
+        async function startPriceComparison(productName) {
+            const resultCard = document.getElementById('result-card');
+            const resultSummary = document.getElementById('result-summary');
+            const resultList = document.getElementById('result-list');
+            const localPrice = document.getElementById('local-shop-input').value.trim();
+
+            resultCard.style.display = "block";
+            resultSummary.innerText = "🛒 指定された商品のネット最安値を調査中...";
+            resultList.innerHTML = "";
+            document.getElementById('btn-reset').style.display = "block";
+
+            let prompt = `You are a professional price comparison assistant for Akky.\n`;
+            prompt += `[Target Exact Product]: ${productName}\n`;
+            prompt += `[User's Regular Shops]: ${whitelist.join(', ')}\n`;
+            prompt += `[BANNED Shops]: ${blacklist.join(', ')} -> NEVER include these.\n`;
+            if(localPrice) prompt += `[User's Local Price]: ${localPrice}\n`;
+            
+            prompt += `\nCRITICAL SYSTEM RULES:\n`;
+            prompt += `1. Provide real market prices and details for this specific product in Japan. No imaginary data.\n`;
+            prompt += `2. Real prices only. Prohibit imaginary calculation values. Realistically simulate current top online platforms.\n`;
+            prompt += `3. Output MUST be valid JSON only.\n`;
+            
+            prompt += `\nJSON structure:\n`;
+            prompt += `{\n`;
+            prompt += `  "verdict": "Conclusion in Japanese comparing the stores and local price if provided.",\n`;
+            prompt += `  "searched_keyword": "${productName}",\n`;
+            prompt += `  "shops": [\n`;
+            prompt += `    { "name": "Shop Name", "is_regular": true, "base_price": "〇〇円", "shipping": "送料無料 または 〇〇円", "points": "特典や還元情報", "direct_search_url": "" }\n`;
+            prompt += `  ]\n`;
+            prompt += `}`;
+
+            try {
+                const result = await callGemini(prompt, false);
+
+                const detectedWord = result.searched_keyword || productName;
                 resultSummary.innerHTML = `
                     📢 結論：<br><span style="color:#fff; font-weight:normal; font-size:0.9rem;">${result.verdict}</span>
                     <div style="margin-top: 12px; padding: 10px; background: #1a1a1a; border-radius: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
                         <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;">
-                            📋 <span style="color:var(--text-muted);">参考ワード:</span> <strong id="target-word" style="color:var(--primary-color);">${detectedWord}</strong>
+                            📋 <span style="color:var(--text-muted);">検索商品:</span> <strong id="target-word" style="color:var(--primary-color);">${detectedWord}</strong>
                         </div>
                         <button onclick="copyKeyword()" style="width:auto; margin:0; padding:6px 12px; font-size:0.75rem; background:#3a3a3a; border:none; border-radius:6px; color:#fff; font-weight:bold; cursor:pointer; flex-shrink:0;">コピー</button>
                     </div>
@@ -603,17 +637,14 @@
                         `;
                     }).join('');
                 } else {
-                    if (!result.ai_suggestions || result.ai_suggestions.length === 0) {
-                        resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">ショップ情報が見つかりませんでした。</p>`;
-                    }
+                    resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">ショップ情報が見つかりませんでした。</p>`;
                 }
-                document.getElementById('btn-reset').style.display = "block";
+                window.scrollTo({ top: resultCard.offsetTop - 20, behavior: 'smooth' });
 
-            } catch (error) {
-                console.error(error);
-                resultSummary.innerText = "❌ 通信または解析エラーが発生しました。";
-                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">原因の可能性：<br>① 設定したAPIキーが間違っているか、有効期限が切れている<br>② 一時的なアクセス集中<br><br>もう一度ボタンを押すか、キーの文字列を再度ご確認ください。</p>`;
-                document.getElementById('btn-reset').style.display = "block";
+            } catch(e) {
+                console.error(e);
+                resultSummary.innerText = "❌ 最安値の解析中にエラーが発生しました。";
+                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">一時的にAIとの接続が途切れた可能性があります。もう一度ボタンを押してみてください。</p>`;
             }
         }
     </script>
