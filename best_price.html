@@ -382,6 +382,11 @@
             if(globalSuggestions[index]) {
                 document.getElementById('search-input').value = globalSuggestions[index];
                 document.getElementById('ai-chat-section').style.display = "none"; 
+                // 提案選択時は画像を引き継がないようクリア
+                base64Image = null;
+                const fileInput = document.getElementById('image-file');
+                if (fileInput) fileInput.value = "";
+                document.getElementById('img-preview').style.display = "none";
                 startComparison();
             }
         }
@@ -392,6 +397,13 @@
             const orig = document.getElementById('search-input').value;
             document.getElementById('search-input').value = `${orig} ${ans}`;
             document.getElementById('ai-chat-section').style.display = "none";
+            
+            // 【最重要修正】対話2周目は画像引き継ぎエラーを防ぐため画像を完全クリア
+            base64Image = null;
+            const fileInput = document.getElementById('image-file');
+            if (fileInput) fileInput.value = "";
+            document.getElementById('img-preview').style.display = "none";
+            
             startComparison();
         }
 
@@ -506,7 +518,6 @@
                 try {
                     result = JSON.parse(rawText);
                 } catch(e) {
-                    // 万が一JSONパースに失敗した場合の超・鉄壁フォールバック
                     result = {
                         "ask_user_for_details": "",
                         "verdict": "AIからの応答データをうまく処理できませんでした。もう一度お試しいただくか、キーワードを具体的にしてみてください（例: 冷凍庫 小型 スリム）。",
