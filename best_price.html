@@ -439,7 +439,7 @@
             return JSON.parse(rawText);
         }
 
-        // 【1周目】最初の検索（強制的に質問画面を表示して止める構造に変更）
+        // 【1周目】最初の検索
         async function startInitialSearch() {
             const textQuery = document.getElementById('search-input').value.trim();
             if(!textQuery && !base64Image) return alert("商品名を入力するか、画像をアップロードしてください！");
@@ -455,7 +455,6 @@
             const resultSummary = document.getElementById('result-summary');
             const resultList = document.getElementById('result-list');
 
-            // 状態初期化
             resultCard.style.display = "block";
             resultSummary.innerText = "✨ 商品カテゴリを分析中...";
             resultList.innerHTML = "";
@@ -473,7 +472,6 @@
                 const result = await callGemini(prompt, true);
                 resultCard.style.display = "none";
 
-                // AIの返答が壊れていても、フォールバックの質問を用意して絶対に消さない
                 let questionText = "どのような機能やサイズ、ご予算でお探しですか？具体的なこだわりがあれば教えてください！";
                 if (result && result.ask_user_for_details) {
                     questionText = result.ask_user_for_details;
@@ -485,25 +483,22 @@
 
             } catch(e) {
                 console.error(e);
-                // エラー時もチャット欄を強制出現させて、自力で進めるようにする
                 resultCard.style.display = "none";
                 chatSection.style.display = "block";
                 document.getElementById('ai-chat-question').innerText = `「${textQuery}」について、容量やサイズ、霜取り不要などの具体的なご希望を教えてくださいな 💡`;
             }
         }
 
-        // 【2周目】ユーザーが詳細を返信した時（確実に3つの提案を出させる）
+        // 【2周目】ユーザーが詳細を返信した時
         async function submitChatDetailAnswer() {
             const ans = document.getElementById('ai-chat-answer').value.trim();
             if(!ans) return alert("条件を入力してくださいな 💡");
 
             const textQuery = document.getElementById('search-input').value.trim();
             const chatSection = document.getElementById('ai-chat-section');
-            const sugSection = document.getElementById('ai-suggestions-section');
             const resultCard = document.getElementById('result-card');
             const resultSummary = document.getElementById('result-summary');
 
-            // 質問欄は閉じ、ローディングを見せる
             chatSection.style.display = "none";
             resultCard.style.display = "block";
             resultSummary.innerText = "✨ 条件に合うベストな商品を3つピックアップ中...";
@@ -522,13 +517,12 @@
                 if (result && result.ai_suggestions && result.ai_suggestions.length > 0) {
                     showSuggestions(result.ai_suggestions);
                 } else {
-                    // 万が一JSONが空だった場合のダミーフォールバック（ユーザーの文字を入力欄に戻す）
                     throw new Error("EMPTY_SUGGESTIONS");
                 }
             } catch(e) {
                 console.error(e);
                 resultCard.style.display = "none";
-                chatSection.style.display = "block"; // 質問欄を復活させる
+                chatSection.style.display = "block";
                 alert("商品の抽出がうまくできませんでした。もう少し具体的なワード（メーカー名や「スリム」「100L」など）を混ぜて返信してみてください！");
             }
         }
@@ -547,6 +541,7 @@
                     <div class="ai-item">
                         <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
                         <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin: 4px 0 10px 0;">✨ ${item.reason}</span>
+                        <!-- 【ここを大修正】タップしたら自動で即時最安値比較関数を呼び出す -->
                         <button class="btn-main" style="padding:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectFinalProduct(${index})">この商品の最安値を一発比較する ✨</button>
                     </div>
                 `;
@@ -554,12 +549,15 @@
             window.scrollTo({ top: sugSection.offsetTop - 20, behavior: 'smooth' });
         }
 
-        // 【3周目】選んだおすすめ商品をタップした時
+        // 【3周目★大修正】選んだおすすめ商品をタップした時、そのまま自動で最安値サーチまで走る
         function selectFinalProduct(index) {
             const targetProductName = globalSuggestions[index];
             if(targetProductName) {
+                // 検索窓に反映
                 document.getElementById('search-input').value = targetProductName;
+                // 提案エリアは閉じる
                 document.getElementById('ai-suggestions-section').style.display = "none";
+                // 【超重要】ボタンをもう一回押させるのではなく、ここで自動で最安値検索を起動する！
                 startPriceComparison(targetProductName);
             }
         }
