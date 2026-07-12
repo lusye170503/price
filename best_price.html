@@ -7,42 +7,43 @@
     
     <!-- PWA設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ずぼら比較">
     
     <style>
         :root {
-            --primary-color: #d4af37; /* シャンパンゴールド */
-            --primary-hover: #bda030;
-            --accent-color: #e67e22; /* コッパーオレンジ */
-            --bg-color: #1a1a1a; /* ダークチャコール */
-            --card-bg: #242424; 
-            --text-color: #f5f5f7; 
-            --text-muted: #9e9e9e; 
-            --shop-safe: #34495e; 
-            --ai-bg: #1c2833; /* ディープブルー */
+            --bg-color: #f4f0ea; /* ペールベージュ（温かみのある生成り） */
+            --card-bg: #ffffff; /* 純白のカード */
+            --primary-color: #8c765c; /* アースブラウン */
+            --accent-color: #d98880; /* くすみテラコッタ */
+            --text-color: #3a3530; /* 深いチャコールブラウン */
+            --text-muted: #8a8279; /* 柔らかなグレーブラウン */
+            --border-color: #e2dacd; /* 馴染みの良い境界線 */
+            --shop-safe: #566573;
+            --ai-bg: #eae3d5; /* 少し濃い目のベージュ */
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 0;
             padding-bottom: 80px;
             -webkit-tap-highlight-color: transparent;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
+            line-height: 1.6;
         }
 
         header {
             background-color: var(--card-bg);
-            padding: 22px 15px 18px 15px;
+            padding: 20px 15px;
             text-align: center;
-            font-size: 1.15rem;
-            font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: bold;
             color: var(--primary-color);
-            border-bottom: 1px solid #2d2d2d;
-            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
         .container { padding: 15px; }
@@ -50,10 +51,10 @@
         .card {
             background-color: var(--card-bg);
             border-radius: 14px;
-            padding: 18px;
+            padding: 20px;
             margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            border: 1px solid #2e2e2e;
+            box-shadow: 0 4px 14px rgba(140, 118, 92, 0.06);
+            border: 1px solid var(--border-color);
         }
 
         h2 {
@@ -62,68 +63,55 @@
             color: var(--primary-color);
             border-left: 3px solid var(--primary-color);
             padding-left: 10px;
-            margin-bottom: 14px;
-            font-weight: 600;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
 
-        .page { display: none; }
-        .page.active { display: block !important; }
+        .step-badge {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
 
         input, textarea, button, select {
             width: 100%;
             padding: 14px;
             margin: 8px 0;
             border-radius: 10px;
-            border: 1px solid #3a3a3a;
-            background-color: #1e1e1e;
-            color: #fff;
+            border: 1px solid var(--border-color);
+            background-color: #faf9f6;
+            color: var(--text-color);
             font-size: 0.95rem;
             box-sizing: border-box;
         }
         input:focus, textarea:focus {
             border-color: var(--primary-color);
+            background-color: #fff;
             outline: none;
-        }
-
-        .mode-selector {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        .mode-btn {
-            flex: 1;
-            background-color: #222;
-            color: var(--text-muted);
-            border: 1px solid #333;
-            padding: 12px 5px;
-            font-size: 0.85rem;
-            border-radius: 10px;
-            cursor: pointer;
-            text-align: center;
-        }
-        .mode-btn.active {
-            background-color: #2c2c2c;
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-            font-weight: bold;
         }
 
         button.btn-main {
             background-color: var(--primary-color);
-            color: #111;
+            color: #ffffff;
             border: none;
             font-weight: bold;
-            font-size: 1.05rem;
+            font-size: 1rem;
             cursor: pointer;
             padding: 16px;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+            box-shadow: 0 4px 12px rgba(140, 118, 92, 0.15);
             border-radius: 10px;
+            transition: background 0.2s;
         }
-        button.btn-main:active { background-color: var(--primary-hover); }
+        button.btn-main:active { background-color: #736049; }
 
         button.btn-sub {
-            background-color: #3a3a3a;
-            color: #ddd;
+            background-color: #e8e2d5;
+            color: var(--primary-color);
             border: none;
             font-size: 0.8rem;
             padding: 8px 14px;
@@ -131,59 +119,46 @@
             margin: 4px;
             border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
         }
 
         button.btn-clear {
-            background-color: #282828;
-            color: #bbb;
-            border: 1px solid #3a3a3a;
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
             padding: 12px;
             margin-top: 10px;
             border-radius: 10px;
             cursor: pointer;
+            font-size: 0.85rem;
         }
 
         .btn-link {
-            background-color: #34495e !important;
+            background-color: var(--primary-color) !important;
             color: #fff !important;
-            font-weight: 600;
+            font-weight: bold;
             text-decoration: none;
             display: inline-block;
             padding: 10px 16px;
             border-radius: 8px;
             font-size: 0.85rem;
-            border: 1px solid #566573;
             text-align: center;
         }
 
         .ai-chat-box {
-            background: #1a252f;
-            border: 1px solid #2c3e50;
+            background: #fdfcf7;
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 16px;
+            padding: 18px;
             margin-bottom: 18px;
-        }
-        .ai-suggestion-box {
-            background: var(--ai-bg);
-            border: 1px solid #2e4053;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 18px;
-        }
-        .ai-item {
-            background: #151d24;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 10px;
-            border-left: 4px solid var(--primary-color);
         }
 
         .result-item {
-            background: #1c1c1c;
+            background: #faf9f6;
             border-radius: 10px;
             padding: 14px;
             margin-bottom: 12px;
-            border: 1px solid #2c2c2c;
+            border: 1px solid var(--border-color);
             border-left: 4px solid var(--shop-safe);
         }
         .shop-tag {
@@ -194,29 +169,32 @@
             font-weight: bold;
             margin-bottom: 8px;
         }
-        .tag-regular { background: #2e4053; color: #ebf5fb; }
-        .tag-unknown { background: #78281f; color: #ffdac1; }
+        .tag-regular { background: #e2dacd; color: var(--primary-color); }
+        .tag-unknown { background: #fadbd8; color: #c0392b; }
 
-        .price-large { font-size: 1.35rem; font-weight: 700; color: #fff; }
-        .shipping-text { font-size: 0.85rem; color: #e67e22; margin-left: 12px; }
-        .points-text { font-size: 0.85rem; color: #f4d03f; margin-top: 6px; }
+        .price-large { font-size: 1.35rem; font-weight: bold; color: var(--text-color); }
+        .shipping-text { font-size: 0.85rem; color: #d35400; margin-left: 12px; font-weight: bold; }
+        .points-text { font-size: 0.85rem; color: #b7950b; margin-top: 6px; }
 
         #img-preview {
-            max-width: 100%; max-height: 150px; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid #333;
+            max-width: 100%; max-height: 150px; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid var(--border-color);
         }
 
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
             background-color: var(--card-bg); display: flex; justify-content: space-around; align-items: center;
-            border-top: 1px solid #2d2d2d; z-index: 9999;
+            border-top: 1px solid var(--border-color); z-index: 9999;
         }
         .nav-item { flex: 1; text-align: center; color: var(--text-muted); font-size: 0.75rem; text-decoration: none; cursor: pointer; }
         .nav-item.active { color: var(--primary-color); font-weight: bold; }
         .nav-icon { display: block; font-size: 1.25rem; margin-bottom: 3px; }
 
-        .list-box { background: #1a1a1a; padding: 12px; border-radius: 10px; font-size: 0.9rem; border: 1px solid #2d2d2d; }
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2d2d2d; }
+        .list-box { background: #faf9f6; padding: 12px; border-radius: 10px; font-size: 0.9rem; border: 1px solid var(--border-color); }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
         .list-item:last-child { border-bottom: none; }
+        
+        .page { display: none; }
+        .page.active { display: block !important; }
     </style>
 </head>
 <body>
@@ -225,66 +203,64 @@
 
     <div class="container">
         
-        <!-- 🏠 メイン比較画面 -->
+        <!-- 🏠 メイン画面 -->
         <div id="page-search" class="page active">
             
-            <div class="mode-selector">
-                <div id="m-easy" class="mode-btn active" onclick="setSearchMode('easy')">🕰️ ふんわり検索<br>(探す・迷い中用)</div>
-                <div id="m-strict" class="mode-btn" onclick="setSearchMode('strict')">🎯 型番でカッチリ<br>(最安値指名買い)</div>
-            </div>
-
-            <div class="card">
-                <h2>🛒 何をくらべる？</h2>
-                <input type="text" id="search-input" placeholder="例: Staub ココット 26cm チェリーレッド">
+            <!-- 【ステップ①：商品特定フェーズ】 -->
+            <div id="section-step1" class="card">
+                <span class="step-badge">ステップ①：欲しいものを特定する</span>
+                <h2>🛒 いま何を探していますか？</h2>
+                <input type="text" id="search-input" placeholder="例: ラーメン鍋、Staubの鍋、加湿器 など">
                 
-                <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">📸 画像やスクショから商品特定 (Geminiの目)</span>
+                <div style="margin-top: 14px; border-top: 1px dashed var(--border-color); padding-top: 12px;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">📸 画像やスクショから探す（Geminiの目）</span>
                     <input type="file" id="image-file" accept="image/*" onchange="previewImage(this)">
                     <img id="img-preview" alt="プレビュー">
                 </div>
 
-                <div style="margin-top: 14px; border-top: 1px dashed #3a3a3a; padding-top: 12px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 近所のチラシ・実店舗 of 对抗価格 (あれば)</span>
-                    <input type="text" id="local-shop-input" placeholder="例: 近所のドンキで 3,980円だった">
+                <div style="margin-top: 14px; border-top: 1px dashed var(--border-color); padding-top: 12px;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">🏪 実店舗の対抗価格（あれば入力）</span>
+                    <input type="text" id="local-shop-input" placeholder="例: ドンキで 3,980円だった">
                 </div>
+
+                <button class="btn-main" style="margin-top: 15px;" id="btn-start-chat" onclick="startProductIdentification();">Geminiに相談して探す 💬</button>
             </div>
 
-            <button class="btn-main" id="btn-submit" onclick="startInitialSearch();">最安値を一発比較する ✨</button>
-            
-            <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
-
-            <!-- 📊 対話用セクション (質問回答) -->
-            <div id="ai-chat-section" class="ai-chat-box" style="display:none; margin-top: 20px;">
+            <!-- 💬 Geminiとのやり取り（チャット）セクション -->
+            <div id="ai-chat-section" class="ai-chat-box" style="display:none;">
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
-                <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
-                <textarea id="ai-chat-answer" placeholder="例: 100L前後で、スリムタイプ。霜取り不要がいい！" rows="2" style="background:#111; border:1px solid #444; width:100%; color:#fff; padding:10px; border-radius:8px; box-sizing:border-box; font-family:inherit;"></textarea>
-                <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatDetailAnswer()">この条件で商品を探してもらう 🔍</button>
+                <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px;"></div>
+                <textarea id="ai-chat-answer" placeholder="例: 18センチのやつ！IH対応が希望です。" rows="2"></textarea>
+                <button class="btn-main" style="padding:12px; margin-top:8px; font-size:0.9rem;" onclick="submitChatDetailAnswer()">この条件を伝える ➔</button>
             </div>
 
-            <!-- 📊 【最重要】おすすめ商品提案セクション（3種類の候補） -->
-            <div id="ai-suggestions-section" class="ai-suggestion-box" style="display:none; margin-top: 20px;">
-                <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💡 Geminiのおすすめ商品候補 (3種類)</div>
+            <!-- 💡 特定された最終商品候補の提示 -->
+            <div id="ai-suggestions-section" class="card" style="display:none; border: 2px solid var(--primary-color);">
+                <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">✨ 欲しいものが特定されました！</div>
                 <div id="ai-suggestions-list"></div>
             </div>
 
-            <!-- 📊 比較結果表示（最終価格） -->
-            <div class="card" id="result-card" style="display:none; margin-top: 20px;">
-                <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
-                <div id="result-summary" style="font-size: 0.95rem; line-height: 1.5; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #2d2d2d;"></div>
+            <!-- 【ステップ②③④：価格比較フェーズ】 -->
+            <div class="card" id="result-card" style="display:none;">
+                <span class="step-badge" style="background-color: var(--accent-color);">ステップ②③④：最安値・リンク確認</span>
+                <h2>🏆 取扱いサイトと価格比較</h2>
+                <div id="result-summary" style="font-size: 0.95rem; margin-bottom: 15px; padding: 12px; background: #faf9f6; border-radius: 8px; border: 1px solid var(--border-color);"></div>
                 <div id="result-list"></div>
             </div>
+
+            <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none; width:100%;">条件をクリアして最初からやり直す 🔄</button>
         </div>
 
         <!-- 🛡️ 設定・ショップ管理画面 -->
         <div id="page-settings" class="page">
             <div class="card">
-                <h2>🔑 AIの鍵設定（家計簿・英語共通）</h2>
+                <h2>🔑 AIの鍵設定</h2>
                 <input type="password" id="app-api-key" placeholder="AQ.Ab8... で始まるキーを貼り付け" onchange="saveKey();">
                 <p style="font-size:0.75rem; color:#4e8d7c; margin: 5px 0 0 0; display:none;" id="key-status-msg">✅ 鍵を記憶しました！</p>
             </div>
 
             <div class="card">
-                <h2>❌ 除外ショップ（ブラックリスト）</h2>
+                <h2>❌ 除外ショップ</h2>
                 <div class="list-box" id="blacklist-container"></div>
                 <div style="display:flex; gap:6px; margin-top:8px;">
                     <input type="text" id="new-blacklist-shop" placeholder="ショップ名を手動追加" style="margin:0;">
@@ -293,7 +269,7 @@
             </div>
 
             <div class="card">
-                <h2>📌 お気に入りショップ（レギュラー固定）</h2>
+                <h2>📌 お気に入りショップ</h2>
                 <div class="list-box" id="whitelist-container"></div>
             </div>
         </div>
@@ -306,12 +282,11 @@
     </div>
 
     <script>
-        let currentMode = 'easy';
         let base64Image = null;
         let globalSuggestions = []; 
         let initialSearchKeyword = ""; 
 
-        let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN", "TikTok Lite（アプリ内ショップ）"];
+        let whitelist = JSON.parse(localStorage.getItem('akky_shop_whitelist')) || ["Amazon", "楽天市場", "ヨドバシカメラ", "AliExpress", "Temu", "ZOZOTOWN"];
         let blacklist = JSON.parse(localStorage.getItem('akky_shop_blacklist')) || [];
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -341,14 +316,6 @@
             if(element) element.classList.add('active');
         }
 
-        function setSearchMode(mode) {
-            currentMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('m-' + mode).classList.add('active');
-            const inputEl = document.getElementById('search-input');
-            inputEl.placeholder = mode === 'strict' ? "例: Staub 40509-307 (型番やJANコード)" : "例: Staub ココット 26cm チェリーレッド";
-        }
-
         function previewImage(input) {
             const file = input.files[0];
             if (file) {
@@ -363,28 +330,22 @@
             }
         }
 
-        // 🔄 全体をまっさらに完全リセットして新規検索エラーを撲滅
         function clearAllInputs() {
             document.getElementById('search-input').value = "";
             document.getElementById('local-shop-input').value = "";
             document.getElementById('ai-chat-answer').value = "";
-            
             const fileInput = document.getElementById('image-file');
             if (fileInput) fileInput.value = ""; 
             document.getElementById('img-preview').style.display = "none";
             
-            // 内部変数を完璧に初期化
             base64Image = null;
             globalSuggestions = [];
             initialSearchKeyword = "";
 
-            // 全ての表示ブロックを初期状態に戻す
+            document.getElementById('section-step1').style.display = "block";
             document.getElementById('ai-chat-section').style.display = "none";
             document.getElementById('ai-suggestions-section').style.display = "none";
-            document.getElementById('ai-suggestions-list').innerHTML = "";
             document.getElementById('result-card').style.display = "none";
-            document.getElementById('result-summary').innerHTML = "";
-            document.getElementById('result-list').innerHTML = "";
             document.getElementById('btn-reset').style.display = "none";
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -393,7 +354,7 @@
         function renderShopLists() {
             const blContainer = document.getElementById('blacklist-container');
             blContainer.innerHTML = blacklist.length === 0 ? `<span style="color:var(--text-muted); font-size:0.8rem;">除外中のショップはありません。</span>` : 
-                blacklist.map((shop, i) => `<div class="list-item"><span>❌ ${shop}</span><button class="btn-sub" style="background:#78281f; padding:4px 8px; margin:0; color:#fff;" onclick="removeBlacklist(${i})">解除</button></div>`).join('');
+                blacklist.map((shop, i) => `<div class="list-item"><span>❌ ${shop}</span><button class="btn-sub" style="background:#fadbd8; color:#c0392b; padding:4px 8px; margin:0;" onclick="removeBlacklist(${i})">解除</button></div>`).join('');
 
             const wlContainer = document.getElementById('whitelist-container');
             wlContainer.innerHTML = whitelist.map(shop => `<div class="list-item"><span>📌 ${shop}</span><span style="font-size:0.75rem; color:var(--text-muted);">レギュラー</span></div>`).join('');
@@ -418,7 +379,7 @@
 
         function copyKeyword() {
             const word = document.getElementById('target-word').innerText;
-            navigator.clipboard.writeText(word).then(() => alert("コピーしました！📋")).catch(() => alert("コピー失敗 😢"));
+            navigator.clipboard.writeText(word).then(() => alert("コピーしました！📋"));
         }
 
         async function callGemini(promptText, hasImage = false) {
@@ -436,14 +397,9 @@
                 body: JSON.stringify({ contents: payloadContents })
             });
 
-            if(!response.ok) {
-                const errText = await response.text();
-                throw new Error("API_ERROR_STATUS_" + response.status);
-            }
+            if(!response.ok) throw new Error("API_ERROR_STATUS_" + response.status);
             
             const data = await response.json();
-            if(!data.candidates || data.candidates.length === 0) throw new Error("NO_CANDIDATES_RETURNED");
-            
             let rawText = data.candidates[0].content.parts[0].text.trim();
             
             const firstBracket = rawText.indexOf('{');
@@ -451,173 +407,125 @@
             if (firstBracket !== -1 && lastBracket !== -1) {
                 rawText = rawText.substring(firstBracket, lastBracket + 1);
             }
-            
             return JSON.parse(rawText);
         }
 
-        // 【1周目】最初のざっくり検索（質問を生成する）
-        async function startInitialSearch() {
+        // 🛠️ 【① 欲しいものを特定する：フェーズ1】
+        async function startProductIdentification() {
             const textQuery = document.getElementById('search-input').value.trim();
-            if(!textQuery && !base64Image) return alert("商品名を入力するか、画像をアップロードしてください！");
-
-            if (currentMode === 'strict') {
-                startPriceComparison(textQuery);
-                return;
-            }
+            if(!textQuery && !base64Image) return alert("探したいもののヒントを入力するか、画像を載せてね！");
 
             initialSearchKeyword = textQuery;
-
-            const chatSection = document.getElementById('ai-chat-section');
-            const sugSection = document.getElementById('ai-suggestions-section');
-            const resultCard = document.getElementById('result-card');
-            const resultSummary = document.getElementById('result-summary');
-            const resultList = document.getElementById('result-list');
-
-            // 一旦綺麗に隠す
-            resultCard.style.display = "block";
-            resultSummary.innerText = "✨ 商品カテゴリを分析中...";
-            resultList.innerHTML = "";
-            chatSection.style.display = "none";
-            sugSection.style.display = "none";
             document.getElementById('btn-reset').style.display = "block";
+            
+            const chatSection = document.getElementById('ai-chat-section');
+            chatSection.style.display = "block";
+            document.getElementById('ai-chat-question').innerText = "✨ 条件を読み込んでいます...";
 
-            let prompt = `ユーザーは日本のECサイトで「${initialSearchKeyword}」に関する何かを探しています。より最適な具体的商品を絞り込むために、サイズ、容量、予算、設置タイプ、機能などの希望を優しく深掘りする質問を日本語で1つ作成してください。必ず以下のJSONフォーマットの通りに出力してください。余計な文章は一切含めないでください。
+            let prompt = `ユーザーは「${initialSearchKeyword}」を探しています。サイズ、容量、素材、ブランドなどの希望やこだわりを1つだけ優しく深掘りする質問を日本語で作成してください。必ず以下のJSONのみを出力してください。
 {
-  "ask_user_for_details": "ここにユーザーへの短い質問文"
+  "ask_user_for_details": "ここに質問文"
 }`;
 
             try {
                 const result = await callGemini(prompt, true);
-                resultCard.style.display = "none";
-
-                let questionText = "どのような機能やサイズ、ご予算でお探しですか？具体的なこだわりがあれば教えてください！";
-                if (result && result.ask_user_for_details) {
-                    questionText = result.ask_user_for_details;
-                }
-
-                chatSection.style.display = "block";
-                document.getElementById('ai-chat-question').innerText = questionText;
-                window.scrollTo({ top: chatSection.offsetTop - 20, behavior: 'smooth' });
-
+                document.getElementById('ai-chat-question').innerText = result.ask_user_for_details || "具体的なサイズや、何かこだわり（IH対応など）はありますか？";
             } catch(e) {
-                console.error(e);
-                resultCard.style.display = "none";
-                chatSection.style.display = "block";
-                document.getElementById('ai-chat-question').innerText = `「${initialSearchKeyword}」について、容量やサイズ、設置方法などの具体的なご希望を教えてくださいな 💡`;
+                document.getElementById('ai-chat-question').innerText = `「${initialSearchKeyword}」について、サイズや容量、ブランドなどのご希望を教えてくださいな 💡`;
             }
+            window.scrollTo({ top: chatSection.offsetTop - 20, behavior: 'smooth' });
         }
 
-        // 【2周目】チャットの質問に答えたとき（3つの商品候補を出す）
+        // 🛠️ 【① 欲しいものを特定する：フェーズ2】チャットに回答した時
         async function submitChatDetailAnswer() {
             const ans = document.getElementById('ai-chat-answer').value.trim();
             if(!ans) return alert("条件を入力してくださいな 💡");
 
             const chatSection = document.getElementById('ai-chat-section');
-            const resultCard = document.getElementById('result-card');
-            const resultSummary = document.getElementById('result-summary');
+            const sugSection = document.getElementById('ai-suggestions-section');
+            const sugList = document.getElementById('ai-suggestions-list');
 
-            // 質問箱は用済みなので閉じるが、結果カードを仮の「ローディング中」として使う
             chatSection.style.display = "none";
-            resultCard.style.display = "block";
-            resultSummary.innerText = "✨ 条件に合うベストな商品候補を3つピックアップ中...";
+            sugSection.style.display = "block";
+            sugList.innerHTML = "✨ 条件に合う具体的な商品候補を3つ選定中...";
 
-            let prompt = `ユーザーは「${initialSearchKeyword}」について、「${ans}」というこだわり条件を持っています。
-この条件に合致しそうな、日本で一般的な「具体的な商品ジャンル、メーカー、または代表的なモデル（例: アイリスオーヤマ スリム冷凍庫 85L、三菱電機 ホームフリーザー など）」を3つ提案してください。完璧に現行の正確な型番である必要はありません。イメージが伝わる名称で結構です。
-
-必ず以下のJSONのテンプレートの空欄を埋める形だけで返してください。前後の余計な挨拶や解説は完全禁止です。
+            let prompt = `ユーザーは「${initialSearchKeyword}」で、追加条件は「${ans}」です。
+この条件に合致する、日本国内で買える具体的な商品モデル・名称を3種類提案してください。
+必ず以下のJSON形式のみで出力してください。
 
 {
   "ai_suggestions": [
-    { "name": "1つ目のメーカー名と商品イメージ名", "reason": "条件に合う理由を日本語で" },
-    { "name": "2つ目のメーカー名と商品イメージ名", "reason": "条件に合う理由を日本語で" },
-    { "name": "3つ目のメーカー名と商品イメージ名", "reason": "条件に合う理由を日本語で" }
+    { "name": "メーカー名や具体的な商品名・モデル名1", "reason": "おすすめの理由" },
+    { "name": "メーカー名や具体的な商品名・モデル名2", "reason": "おすすめの理由" },
+    { "name": "メーカー名や具体的な商品名・モデル名3", "reason": "おすすめの理由" }
   ]
 }`;
 
             try {
                 const result = await callGemini(prompt, false);
-                resultCard.style.display = "none"; // 候補が出せるので、一旦ローディングは閉じる
-
-                if (result && result.ai_suggestions && result.ai_suggestions.length > 0) {
-                    showSuggestions(result.ai_suggestions);
-                } else {
-                    throw new Error("EMPTY");
-                }
+                showSuggestions(result.ai_suggestions);
             } catch(e) {
-                console.error("AIエラーまたはパース失敗:", e);
-                resultCard.style.display = "none";
-                
-                let combinedWord = initialSearchKeyword;
-                if (!ans.includes(initialSearchKeyword)) {
-                    combinedWord = `${initialSearchKeyword} ${ans}`;
-                } else {
-                    combinedWord = ans;
-                }
-                
-                const fallbackSuggestions = [
-                    { "name": combinedWord, "reason": "入力いただいた条件を掛け合わせてダイレクトに最安値を調べます！" }
-                ];
-                showSuggestions(fallbackSuggestions);
+                let combined = `${initialSearchKeyword} ${ans}`;
+                showSuggestions([
+                    { "name": `${combined}`, "reason": "入力された条件でそのまま探します！" },
+                    { "name": `${combined} 人気モデル`, "reason": "売れ筋の定番から探します！" },
+                    { "name": `${combined} おすすめ`, "reason": "評価が高いものを中心に探します！" }
+                ]);
             }
         }
 
-        // 💡 3つの商品候補をオレンジの枠内に綺麗に出す処理
         function showSuggestions(suggestions) {
-            const sugSection = document.getElementById('ai-suggestions-section');
             const sugList = document.getElementById('ai-suggestions-list');
-            sugSection.style.display = "block";
-            
             globalSuggestions = suggestions.map(s => s.name);
-            sugList.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">ご希望にぴったりの候補を作成しました！選ぶとその下に価格比較が出ます（他の候補もいつでも押し直せます）：</p>`;
+            
+            sugList.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">対話から絞り込んだおすすめ候補です。探したいものをタップすると、次の【価格比較・リンク確認】に進みます：</p>`;
             
             suggestions.forEach((item, index) => {
                 sugList.innerHTML += `
-                    <div class="ai-item">
-                        <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
-                        <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin: 4px 0 10px 0;">✨ ${item.reason}</span>
-                        <button class="btn-main" style="padding:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectFinalProduct(${index})">この候補の最安値を調べる ✨</button>
+                    <div style="background:#faf9f6; padding:14px; border-radius:8px; margin-top:10px; border:1px solid var(--border-color); border-left:4px solid var(--primary-color);">
+                        <strong style="color:var(--primary-color); font-size:1rem;">${item.name}</strong><br>
+                        <span style="font-size:0.8rem; color:var(--text-muted); display:inline-block; margin: 4px 0 12px 0;">💡 ${item.reason}</span>
+                        <button class="btn-main" style="padding:10px; font-size:0.85rem; width:100%;" onclick="proceedToPriceComparison(${index})">この商品でECサイト最安値を調べる ➔</button>
                     </div>
                 `;
             });
-            window.scrollTo({ top: sugSection.offsetTop - 20, behavior: 'smooth' });
+            window.scrollTo({ top: document.getElementById('ai-suggestions-section').offsetTop - 20, behavior: 'smooth' });
         }
 
-        // 商品をタップした時（この時、上の3つの候補枠は絶対に消さない！）
-        function selectFinalProduct(index) {
+        // 🛒 【②③④：特定商品をもとに取扱い・最安値・リンクを展開】
+        async function proceedToPriceComparison(index) {
             const targetProductName = globalSuggestions[index];
-            if(targetProductName) {
-                startPriceComparison(targetProductName);
-            }
-        }
+            if(!targetProductName) return;
 
-        // 🛒 【3周目】選んだ商品名の実際の最安値を一番下に並べる
-        async function startPriceComparison(productName) {
+            // 特定完了したら、入力エリアと提案エリアをスッキリ非表示に（ごっそり移行）
+            document.getElementById('section-step1').style.display = "none";
+            document.getElementById('ai-suggestions-section').style.display = "none";
+
             const resultCard = document.getElementById('result-card');
             const resultSummary = document.getElementById('result-summary');
             const resultList = document.getElementById('result-list');
             const localPrice = document.getElementById('local-shop-input').value.trim();
 
             resultCard.style.display = "block";
-            resultSummary.innerText = `🛒 「${productName}」のネット最安値を調査中...`;
+            resultSummary.innerText = `🔍 「${targetProductName}」の取扱いショップと最安値をリサーチ中...`;
             resultList.innerHTML = "";
-            document.getElementById('btn-reset').style.display = "block";
 
-            let prompt = `「${productName}」について、日本国内の主要ECサイトでのリアルな販売価格、送料、ポイント還元、セール情報をリサーチしてください。
-[お気に入りショップ]: ${whitelist.join(', ')}
+            let prompt = `「${targetProductName}」について、日本国内の主要ECサイトでのリアルな想定販売価格、送料、ポイント、セール情報をリサーチしてください。
+[お気に入りレギュラー]: ${whitelist.join(', ')}
 [除外ブラックリスト]: ${blacklist.join(', ')}
-${localPrice ? `[実店舗価格との対抗]: ${localPrice}` : ''}
+${localPrice ? `[実店舗価格]: ${localPrice}` : ''}
 
-必ず以下のJSON形式のテンプレートのみで回答してください。
+必ず以下のJSON形式のみで回答してください。
 {
   "verdict": "全体の最安値傾向や、どこで買うのが一番お得かのまとめ（日本語）",
-  "searched_keyword": "${productName}",
+  "searched_keyword": "${targetProductName}",
   "shops": [
     {
-      "name": "ショップ名（例: Amazon）",
+      "name": "ショップ名",
       "is_regular": true,
       "base_price": "〇〇円",
       "shipping": "送料無料 または 送料〇〇円",
-      "points": "還元ポイントやセールの特典情報",
+      "points": "ポイントやセール情報",
       "direct_search_url": ""
     }
   ]
@@ -625,59 +533,92 @@ ${localPrice ? `[実店舗価格との対抗]: ${localPrice}` : ''}
 
             try {
                 const result = await callGemini(prompt, false);
-
-                const detectedWord = result.searched_keyword || productName;
-                resultSummary.innerHTML = `
-                    📢 結論：<br><span style="color:#fff; font-weight:normal; font-size:0.9rem;">${result.verdict}</span>
-                    <div style="margin-top: 12px; padding: 10px; background: #1a1a1a; border-radius: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
-                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;">
-                            📋 <span style="color:var(--text-muted);">検索キーワード:</span> <strong id="target-word" style="color:var(--primary-color);">${detectedWord}</strong>
-                        </div>
-                        <button onclick="copyKeyword()" style="width:auto; margin:0; padding:6px 12px; font-size:0.75rem; background:#3a3a3a; border:none; border-radius:6px; color:#fff; font-weight:bold; cursor:pointer; flex-shrink:0;">コピー</button>
-                    </div>
-                `;
-
-                if(result.shops && result.shops.length > 0) {
-                    resultList.innerHTML = result.shops.map(shop => {
-                        if(blacklist.includes(shop.name)) return '';
-                        const isRegular = whitelist.includes(shop.name) || shop.is_regular;
-                        const tagClass = isRegular ? 'tag-regular' : 'tag-unknown';
-                        let tagLabel = isRegular ? '📌 レギュラー' : '⚠️ 要確認';
-                        if (shop.name.includes("公式") || shop.name.includes("プラザ")) tagLabel = '👑 ブランド公式';
-
-                        let shopUrl = shop.direct_search_url;
-                        if (shop.name === "ヨドバシカメラ") {
-                            shopUrl = `https://www.yodobashi.com/?word=${encodeURIComponent(detectedWord)}`;
-                        } else if (!shopUrl) {
-                            shopUrl = `https://www.google.com/search?q=${encodeURIComponent(shop.name + " " + detectedWord)}`;
-                        }
-
-                        return `
-                            <div class="result-item">
-                                <span class="shop-tag ${tagClass}">${tagLabel} : ${shop.name}</span>
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <div>
-                                        <span class="price-large">${shop.base_price}</span>
-                                        <span class="shipping-text">📦 ${shop.shipping}</span>
-                                    </div>
-                                    <div><a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップへ 🔗</a></div>
-                                </div>
-                                <div class="points-text">🪙 セール/特典: ${shop.points || '情報なし'}</div>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">ショップ情報が見つかりませんでした。</p>`;
-                }
-                
-                // 比較結果のカードへスクロール（上のオレンジ候補枠は残っているので上にスクロールすれば戻れます）
-                window.scrollTo({ top: resultCard.offsetTop - 20, behavior: 'smooth' });
-
+                renderFinalResults(result, targetProductName);
             } catch(e) {
-                console.error(e);
-                resultSummary.innerText = "❌ 最安値の解析中にエラーが発生しました。";
-                resultList.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">一時的にAIとの接続が途切れた可能性があります。もう一度時間を置いてお試しください。</p>`;
+                renderFallbackResults(targetProductName);
             }
+        }
+
+        function renderFinalResults(result, productName) {
+            const resultSummary = document.getElementById('result-summary');
+            const resultList = document.getElementById('result-list');
+            const detectedWord = result.searched_keyword || productName;
+
+            resultSummary.innerHTML = `
+                <span style="font-weight:bold; color:var(--primary-color);">📢 最安値の結論：</span><br>
+                <span style="font-size:0.9rem;">${result.verdict}</span>
+                <div style="margin-top: 12px; padding: 10px; background: #fff; border-radius: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);">
+                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;">
+                        📋 キーワード: <strong id="target-word" style="color:var(--primary-color);">${detectedWord}</strong>
+                    </div>
+                    <button onclick="copyKeyword()" style="width:auto; margin:0; padding:6px 12px; font-size:0.75rem; background:#e8e2d5; border:none; border-radius:6px; color:var(--primary-color); font-weight:bold; cursor:pointer; flex-shrink:0;">コピー</button>
+                </div>
+            `;
+
+            if(result.shops && result.shops.length > 0) {
+                resultList.innerHTML = result.shops.map(shop => {
+                    if(blacklist.includes(shop.name)) return '';
+                    const isRegular = whitelist.includes(shop.name) || shop.is_regular;
+                    const tagClass = isRegular ? 'tag-regular' : 'tag-unknown';
+                    let tagLabel = isRegular ? '📌 レギュラー' : '⚠️ 要確認';
+                    if (shop.name.includes("公式")) tagLabel = '👑 公式';
+
+                    let shopUrl = shop.direct_search_url;
+                    if (shop.name === "ヨドバシカメラ") {
+                        shopUrl = `https://www.yodobashi.com/?word=${encodeURIComponent(detectedWord)}`;
+                    } else if (shop.name === "Amazon") {
+                        shopUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(detectedWord)}`;
+                    } else if (shop.name === "楽天市場") {
+                        shopUrl = `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(detectedWord)}/`;
+                    } else if (!shopUrl) {
+                        shopUrl = `https://www.google.com/search?q=${encodeURIComponent(shop.name + " " + detectedWord)}`;
+                    }
+
+                    return `
+                        <div class="result-item">
+                            <span class="shop-tag ${tagClass}">${tagLabel} : ${shop.name}</span>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <span class="price-large">${shop.base_price}</span>
+                                    <span class="shipping-text">📦 ${shop.shipping}</span>
+                                </div>
+                                <div><a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップへ 🔗</a></div>
+                            </div>
+                            <div class="points-text">🪙 特典/セール: ${shop.points || '特記事項なし'}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                renderFallbackResults(productName);
+            }
+            window.scrollTo({ top: document.getElementById('result-card').offsetTop - 20, behavior: 'smooth' });
+        }
+
+        function renderFallbackResults(productName) {
+            const resultSummary = document.getElementById('result-summary');
+            const resultList = document.getElementById('result-list');
+
+            resultSummary.innerHTML = `
+                ⚠️ <span style="color:var(--accent-color); font-weight:bold;">手動一発ジャンプ画面に切り替えました</span><br>
+                <span style="font-size:0.85rem; color:var(--text-muted);">AIがデータ形式を崩したため、指定の「${productName}」で主要サイトを一発検索できるリンクを作成しました！以下のボタンから実際の最安値を確認できます。</span>
+            `;
+
+            const fallbackShops = [
+                { name: "Amazonで最安値をチェック", url: `https://www.amazon.co.jp/s?k=${encodeURIComponent(productName)}` },
+                { name: "楽天市場で最安値をチェック", url: `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(productName)}/` },
+                { name: "ヨドバシカメラで価格チェック", url: `https://www.yodobashi.com/?word=${encodeURIComponent(productName)}` },
+                { name: "Googleショッピングで価格比較", url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(productName)}` }
+            ];
+
+            resultList.innerHTML = fallbackShops.map(shop => `
+                <div class="result-item" style="border-left: 4px solid var(--accent-color);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div><span style="font-weight:bold; font-size:0.95rem;">${shop.name}</span></div>
+                        <div><a href="${shop.url}" target="_blank" rel="noopener noreferrer" class="btn-link" style="background:var(--accent-color) !important;">開く 🔗</a></div>
+                    </div>
+                </div>
+            `).join('');
+            window.scrollTo({ top: document.getElementById('result-card').offsetTop - 20, behavior: 'smooth' });
         }
     </script>
 </body>
