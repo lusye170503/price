@@ -253,7 +253,7 @@
             
             <button class="btn-clear" id="btn-reset" onclick="clearAllInputs();" style="display:none;">条件をクリアして新しく検索する 🔄</button>
 
-            <!-- 📊 对話用セクション -->
+            <!-- 📊 対話用セクション (質問回答) -->
             <div id="ai-chat-section" class="ai-chat-box" style="display:none; margin-top: 20px;">
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💬 Geminiからの質問</div>
                 <div id="ai-chat-question" style="font-size:0.95rem; line-height:1.5; margin-bottom:12px; color:#fff;"></div>
@@ -261,13 +261,13 @@
                 <button class="btn-main" style="padding:10px; margin-top:8px; font-size:0.9rem;" onclick="submitChatDetailAnswer()">この条件で商品を探してもらう 🔍</button>
             </div>
 
-            <!-- 📊 おすすめ商品提案セクション -->
+            <!-- 📊 【最重要】おすすめ商品提案セクション（3種類の候補） -->
             <div id="ai-suggestions-section" class="ai-suggestion-box" style="display:none; margin-top: 20px;">
-                <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💡 Geminiのおすすめ商品</div>
+                <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">💡 Geminiのおすすめ商品候補 (3種類)</div>
                 <div id="ai-suggestions-list"></div>
             </div>
 
-            <!-- 📊 比較結果表示（最終段階） -->
+            <!-- 📊 比較結果表示（最終価格） -->
             <div class="card" id="result-card" style="display:none; margin-top: 20px;">
                 <h2>🏆 比較結果 (実質表記は完全禁止)</h2>
                 <div id="result-summary" style="font-size: 0.95rem; line-height: 1.5; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #2d2d2d;"></div>
@@ -363,23 +363,30 @@
             }
         }
 
+        // 🔄 全体をまっさらに完全リセットして新規検索エラーを撲滅
         function clearAllInputs() {
             document.getElementById('search-input').value = "";
             document.getElementById('local-shop-input').value = "";
             document.getElementById('ai-chat-answer').value = "";
+            
             const fileInput = document.getElementById('image-file');
             if (fileInput) fileInput.value = ""; 
             document.getElementById('img-preview').style.display = "none";
+            
+            // 内部変数を完璧に初期化
             base64Image = null;
             globalSuggestions = [];
             initialSearchKeyword = "";
 
+            // 全ての表示ブロックを初期状態に戻す
             document.getElementById('ai-chat-section').style.display = "none";
             document.getElementById('ai-suggestions-section').style.display = "none";
+            document.getElementById('ai-suggestions-list').innerHTML = "";
             document.getElementById('result-card').style.display = "none";
             document.getElementById('result-summary').innerHTML = "";
             document.getElementById('result-list').innerHTML = "";
             document.getElementById('btn-reset').style.display = "none";
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -448,7 +455,7 @@
             return JSON.parse(rawText);
         }
 
-        // 【1周目】最初のざっくり検索
+        // 【1周目】最初のざっくり検索（質問を生成する）
         async function startInitialSearch() {
             const textQuery = document.getElementById('search-input').value.trim();
             if(!textQuery && !base64Image) return alert("商品名を入力するか、画像をアップロードしてください！");
@@ -466,6 +473,7 @@
             const resultSummary = document.getElementById('result-summary');
             const resultList = document.getElementById('result-list');
 
+            // 一旦綺麗に隠す
             resultCard.style.display = "block";
             resultSummary.innerText = "✨ 商品カテゴリを分析中...";
             resultList.innerHTML = "";
@@ -499,7 +507,7 @@
             }
         }
 
-        // 【2周目】チャットの質問に答えたとき
+        // 【2周目】チャットの質問に答えたとき（3つの商品候補を出す）
         async function submitChatDetailAnswer() {
             const ans = document.getElementById('ai-chat-answer').value.trim();
             if(!ans) return alert("条件を入力してくださいな 💡");
@@ -508,9 +516,10 @@
             const resultCard = document.getElementById('result-card');
             const resultSummary = document.getElementById('result-summary');
 
+            // 質問箱は用済みなので閉じるが、結果カードを仮の「ローディング中」として使う
             chatSection.style.display = "none";
             resultCard.style.display = "block";
-            resultSummary.innerText = "✨ 条件に合うベストな商品をピックアップ中...";
+            resultSummary.innerText = "✨ 条件に合うベストな商品候補を3つピックアップ中...";
 
             let prompt = `ユーザーは「${initialSearchKeyword}」について、「${ans}」というこだわり条件を持っています。
 この条件に合致しそうな、日本で一般的な「具体的な商品ジャンル、メーカー、または代表的なモデル（例: アイリスオーヤマ スリム冷凍庫 85L、三菱電機 ホームフリーザー など）」を3つ提案してください。完璧に現行の正確な型番である必要はありません。イメージが伝わる名称で結構です。
@@ -527,7 +536,7 @@
 
             try {
                 const result = await callGemini(prompt, false);
-                resultCard.style.display = "none";
+                resultCard.style.display = "none"; // 候補が出せるので、一旦ローディングは閉じる
 
                 if (result && result.ai_suggestions && result.ai_suggestions.length > 0) {
                     showSuggestions(result.ai_suggestions);
@@ -535,10 +544,9 @@
                     throw new Error("EMPTY");
                 }
             } catch(e) {
-                console.error("AIエラーまたはパース失敗のため、重複を排除したスッキリ検索候補を作ります:", e);
+                console.error("AIエラーまたはパース失敗:", e);
                 resultCard.style.display = "none";
                 
-                // 【バグ修正】ダブりをなくして、スペース区切りのシンプルな検索用ワードに整形
                 let combinedWord = initialSearchKeyword;
                 if (!ans.includes(initialSearchKeyword)) {
                     combinedWord = `${initialSearchKeyword} ${ans}`;
@@ -546,7 +554,6 @@
                     combinedWord = ans;
                 }
                 
-                // 15文字程度で綺麗にトリミングして実用的なキーワードにする
                 const fallbackSuggestions = [
                     { "name": combinedWord, "reason": "入力いただいた条件を掛け合わせてダイレクトに最安値を調べます！" }
                 ];
@@ -554,35 +561,36 @@
             }
         }
 
+        // 💡 3つの商品候補をオレンジの枠内に綺麗に出す処理
         function showSuggestions(suggestions) {
             const sugSection = document.getElementById('ai-suggestions-section');
             const sugList = document.getElementById('ai-suggestions-list');
             sugSection.style.display = "block";
             
             globalSuggestions = suggestions.map(s => s.name);
-            sugList.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">ご希望にぴったりの候補を作成しました！タップすると自動で最安値を比較します：</p>`;
+            sugList.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">ご希望にぴったりの候補を作成しました！選ぶとその下に価格比較が出ます（他の候補もいつでも押し直せます）：</p>`;
             
             suggestions.forEach((item, index) => {
                 sugList.innerHTML += `
                     <div class="ai-item">
                         <strong style="color:var(--accent-color); font-size:0.95rem;">${item.name}</strong><br>
                         <span style="font-size:0.8rem; color:#ccc; display:inline-block; margin: 4px 0 10px 0;">✨ ${item.reason}</span>
-                        <button class="btn-main" style="padding:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectFinalProduct(${index})">この条件の最安値を一発比較する ✨</button>
+                        <button class="btn-main" style="padding:10px; font-size:0.85rem; background:var(--primary-color); box-shadow:none;" onclick="selectFinalProduct(${index})">この候補の最安値を調べる ✨</button>
                     </div>
                 `;
             });
             window.scrollTo({ top: sugSection.offsetTop - 20, behavior: 'smooth' });
         }
 
+        // 商品をタップした時（この時、上の3つの候補枠は絶対に消さない！）
         function selectFinalProduct(index) {
             const targetProductName = globalSuggestions[index];
             if(targetProductName) {
-                document.getElementById('search-input').value = targetProductName;
-                document.getElementById('ai-suggestions-section').style.display = "none";
                 startPriceComparison(targetProductName);
             }
         }
 
+        // 🛒 【3周目】選んだ商品名の実際の最安値を一番下に並べる
         async function startPriceComparison(productName) {
             const resultCard = document.getElementById('result-card');
             const resultSummary = document.getElementById('result-summary');
@@ -590,7 +598,7 @@
             const localPrice = document.getElementById('local-shop-input').value.trim();
 
             resultCard.style.display = "block";
-            resultSummary.innerText = "🛒 指定された商品のネット最安値を調査中...";
+            resultSummary.innerText = `🛒 「${productName}」のネット最安値を調査中...`;
             resultList.innerHTML = "";
             document.getElementById('btn-reset').style.display = "block";
 
@@ -623,7 +631,7 @@ ${localPrice ? `[実店舗価格との対抗]: ${localPrice}` : ''}
                     📢 結論：<br><span style="color:#fff; font-weight:normal; font-size:0.9rem;">${result.verdict}</span>
                     <div style="margin-top: 12px; padding: 10px; background: #1a1a1a; border-radius: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
                         <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;">
-                            📋 <span style="color:var(--text-muted);">検索商品:</span> <strong id="target-word" style="color:var(--primary-color);">${detectedWord}</strong>
+                            📋 <span style="color:var(--text-muted);">検索キーワード:</span> <strong id="target-word" style="color:var(--primary-color);">${detectedWord}</strong>
                         </div>
                         <button onclick="copyKeyword()" style="width:auto; margin:0; padding:6px 12px; font-size:0.75rem; background:#3a3a3a; border:none; border-radius:6px; color:#fff; font-weight:bold; cursor:pointer; flex-shrink:0;">コピー</button>
                     </div>
@@ -661,6 +669,8 @@ ${localPrice ? `[実店舗価格との対抗]: ${localPrice}` : ''}
                 } else {
                     resultList.innerHTML = `<p style="color:var(--text-muted); text-align:center;">ショップ情報が見つかりませんでした。</p>`;
                 }
+                
+                // 比較結果のカードへスクロール（上のオレンジ候補枠は残っているので上にスクロールすれば戻れます）
                 window.scrollTo({ top: resultCard.offsetTop - 20, behavior: 'smooth' });
 
             } catch(e) {
