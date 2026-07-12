@@ -122,6 +122,22 @@
             font-weight: bold;
         }
 
+        button.btn-back {
+            background-color: #faf9f6;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         button.btn-clear {
             background-color: transparent;
             color: var(--text-muted);
@@ -210,7 +226,7 @@
             <div id="section-step1" class="card">
                 <span class="step-badge">ステップ①：欲しいものを特定する</span>
                 <h2>🛒 いま何を探していますか？</h2>
-                <input type="text" id="search-input" placeholder="例: ラーメン鍋、Staubの鍋、加湿器 など">
+                <input type="text" id="search-input" placeholder="例: 行平鍋 18cm、Staubの鍋、加湿器 など">
                 
                 <div style="margin-top: 14px; border-top: 1px dashed var(--border-color); padding-top: 12px;">
                     <span style="font-size: 0.8rem; color: var(--text-muted);">📸 画像やスクショから探す（Geminiの目）</span>
@@ -236,12 +252,16 @@
 
             <!-- 💡 特定された最終商品候補の提示 -->
             <div id="ai-suggestions-section" class="card" style="display:none; border: 2px solid var(--primary-color);">
+                <button class="btn-back" onclick="goBackToStep1();">← 条件入力に戻る</button>
                 <div style="color:var(--primary-color); font-weight:bold; margin-bottom:10px;">✨ 欲しいものが特定されました！</div>
                 <div id="ai-suggestions-list"></div>
             </div>
 
             <!-- 【ステップ②③④：価格比較フェーズ】 -->
             <div class="card" id="result-card" style="display:none;">
+                <!-- ↩️ 前の画面に戻るボタンを追加 -->
+                <button class="btn-back" onclick="goBackToSuggestions();">← 商品選び（ステップ①）に戻る</button>
+                
                 <span class="step-badge" style="background-color: var(--accent-color);">ステップ②③④：最安値・リンク確認</span>
                 <h2>🏆 取扱いサイトと価格比較</h2>
                 <div id="result-summary" style="font-size: 0.95rem; margin-bottom: 15px; padding: 12px; background: #faf9f6; border-radius: 8px; border: 1px solid var(--border-color);"></div>
@@ -328,6 +348,20 @@
                 }
                 reader.readAsDataURL(file);
             }
+        }
+
+        // ↩️ 画面を戻るためのナビゲーション関数
+        function goBackToStep1() {
+            document.getElementById('section-step1').style.display = "block";
+            document.getElementById('ai-chat-section').style.display = "none";
+            document.getElementById('ai-suggestions-section').style.display = "none";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goBackToSuggestions() {
+            document.getElementById('result-card').style.display = "none";
+            document.getElementById('ai-suggestions-section').style.display = "block";
+            window.scrollTo({ top: document.getElementById('ai-suggestions-section').offsetTop - 20, behavior: 'smooth' });
         }
 
         function clearAllInputs() {
@@ -497,7 +531,7 @@
             const targetProductName = globalSuggestions[index];
             if(!targetProductName) return;
 
-            // 特定完了したら、入力エリアと提案エリアをスッキリ非表示に（ごっそり移行）
+            // 画面を切り替える
             document.getElementById('section-step1').style.display = "none";
             document.getElementById('ai-suggestions-section').style.display = "none";
 
@@ -507,25 +541,46 @@
             const localPrice = document.getElementById('local-shop-input').value.trim();
 
             resultCard.style.display = "block";
-            resultSummary.innerText = `🔍 「${targetProductName}」の取扱いショップと最安値をリサーチ中...`;
+            resultSummary.innerText = `🔍 「${targetProductName}」の各サイト最安値をリサーチ中...`;
             resultList.innerHTML = "";
+            window.scrollTo({ top: resultCard.offsetTop - 20, behavior: 'smooth' });
 
-            let prompt = `「${targetProductName}」について、日本国内の主要ECサイトでのリアルな想定販売価格、送料、ポイント、セール情報をリサーチしてください。
+            // プロントの条件文をさらにガチガチに強化
+            let prompt = `あなたは優秀な価格比較アシスタントです。「${targetProductName}」について、日本国内の主要ECサイトでの現在のリアルな【販売最安値（目安価格）】、【送料有無】、【ポイント/セール情報】を徹底リサーチして回答してください。
+必ず「shops」配列の中に各ECサイトごとの具体的な価格データを1つずつ格納してください。
+ダミーや空白ではなく、実際の相場に基づいた具体的な金額（例: 2,980円）を「base_price」に必ず記述してください。
+
 [お気に入りレギュラー]: ${whitelist.join(', ')}
 [除外ブラックリスト]: ${blacklist.join(', ')}
 ${localPrice ? `[実店舗価格]: ${localPrice}` : ''}
 
-必ず以下のJSON形式のみで回答してください。
+必ず余計な解説を一切省き、以下のJSON形式データ「のみ」を出力してください。
 {
   "verdict": "全体の最安値傾向や、どこで買うのが一番お得かのまとめ（日本語）",
   "searched_keyword": "${targetProductName}",
   "shops": [
     {
-      "name": "ショップ名",
+      "name": "Amazon",
       "is_regular": true,
-      "base_price": "〇〇円",
-      "shipping": "送料無料 または 送料〇〇円",
-      "points": "ポイントやセール情報",
+      "base_price": "3,480円",
+      "shipping": "送料無料(プライム会員)",
+      "points": "通常1%還元",
+      "direct_search_url": ""
+    },
+    {
+      "name": "楽天市場",
+      "is_regular": true,
+      "base_price": "3,200円",
+      "shipping": "送料550円",
+      "points": "お買い物マラソン対象",
+      "direct_search_url": ""
+    },
+    {
+      "name": "ヨドバシカメラ",
+      "is_regular": true,
+      "base_price": "3,650円",
+      "shipping": "送料無料",
+      "points": "10%ゴールドポイント還元",
       "direct_search_url": ""
     }
   ]
@@ -533,7 +588,12 @@ ${localPrice ? `[実店舗価格]: ${localPrice}` : ''}
 
             try {
                 const result = await callGemini(prompt, false);
-                renderFinalResults(result, targetProductName);
+                // shopsが正しく入っているか厳密にチェック。なければ手動でフォールバックへ飛ばす
+                if (result && result.shops && result.shops.length > 0 && result.shops[0].base_price !== "〇〇円") {
+                    renderFinalResults(result, targetProductName);
+                } else {
+                    renderFallbackResults(targetProductName);
+                }
             } catch(e) {
                 renderFallbackResults(targetProductName);
             }
@@ -555,42 +615,38 @@ ${localPrice ? `[実店舗価格]: ${localPrice}` : ''}
                 </div>
             `;
 
-            if(result.shops && result.shops.length > 0) {
-                resultList.innerHTML = result.shops.map(shop => {
-                    if(blacklist.includes(shop.name)) return '';
-                    const isRegular = whitelist.includes(shop.name) || shop.is_regular;
-                    const tagClass = isRegular ? 'tag-regular' : 'tag-unknown';
-                    let tagLabel = isRegular ? '📌 レギュラー' : '⚠️ 要確認';
-                    if (shop.name.includes("公式")) tagLabel = '👑 公式';
+            resultList.innerHTML = result.shops.map(shop => {
+                if(blacklist.includes(shop.name)) return '';
+                const isRegular = whitelist.includes(shop.name) || shop.is_regular;
+                const tagClass = isRegular ? 'tag-regular' : 'tag-unknown';
+                let tagLabel = isRegular ? '📌 レギュラー' : '⚠️ 要確認';
+                if (shop.name.includes("公式")) tagLabel = '👑 公式';
 
-                    let shopUrl = shop.direct_search_url;
-                    if (shop.name === "ヨドバシカメラ") {
-                        shopUrl = `https://www.yodobashi.com/?word=${encodeURIComponent(detectedWord)}`;
-                    } else if (shop.name === "Amazon") {
-                        shopUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(detectedWord)}`;
-                    } else if (shop.name === "楽天市場") {
-                        shopUrl = `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(detectedWord)}/`;
-                    } else if (!shopUrl) {
-                        shopUrl = `https://www.google.com/search?q=${encodeURIComponent(shop.name + " " + detectedWord)}`;
-                    }
+                let shopUrl = shop.direct_search_url;
+                if (shop.name === "ヨドバシカメラ") {
+                    shopUrl = `https://www.yodobashi.com/?word=${encodeURIComponent(detectedWord)}`;
+                } else if (shop.name === "Amazon") {
+                    shopUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(detectedWord)}`;
+                } else if (shop.name === "楽天市場") {
+                    shopUrl = `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(detectedWord)}/`;
+                } else if (!shopUrl) {
+                    shopUrl = `https://www.google.com/search?q=${encodeURIComponent(shop.name + " " + detectedWord)}`;
+                }
 
-                    return `
-                        <div class="result-item">
-                            <span class="shop-tag ${tagClass}">${tagLabel} : ${shop.name}</span>
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <span class="price-large">${shop.base_price}</span>
-                                    <span class="shipping-text">📦 ${shop.shipping}</span>
-                                </div>
-                                <div><a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップへ 🔗</a></div>
+                return `
+                    <div class="result-item">
+                        <span class="shop-tag ${tagClass}">${tagLabel} : ${shop.name}</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <span class="price-large">${shop.base_price}</span>
+                                <span class="shipping-text">📦 ${shop.shipping}</span>
                             </div>
-                            <div class="points-text">🪙 特典/セール: ${shop.points || '特記事項なし'}</div>
+                            <div><a href="${shopUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">ショップへ 🔗</a></div>
                         </div>
-                    `;
-                }).join('');
-            } else {
-                renderFallbackResults(productName);
-            }
+                        <div class="points-text">🪙 特典/セール: ${shop.points || '特記事項なし'}</div>
+                    </div>
+                `;
+            }).join('');
             window.scrollTo({ top: document.getElementById('result-card').offsetTop - 20, behavior: 'smooth' });
         }
 
@@ -599,8 +655,8 @@ ${localPrice ? `[実店舗価格]: ${localPrice}` : ''}
             const resultList = document.getElementById('result-list');
 
             resultSummary.innerHTML = `
-                ⚠️ <span style="color:var(--accent-color); font-weight:bold;">手動一発ジャンプ画面に切り替えました</span><br>
-                <span style="font-size:0.85rem; color:var(--text-muted);">AIがデータ形式を崩したため、指定の「${productName}」で主要サイトを一発検索できるリンクを作成しました！以下のボタンから実際の最安値を確認できます。</span>
+                ⚠️ <span style="color:var(--accent-color); font-weight:bold;">自動取得に失敗したため、手動ジャンプ画面に切り替えました</span><br>
+                <span style="font-size:0.85rem; color:var(--text-muted);">指定のキーワード「${productName}」で主要サイトを一発検索できるリンクを作成しました。以下のリンクから最安値を確認できます。</span>
             `;
 
             const fallbackShops = [
